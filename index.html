@@ -122,7 +122,7 @@ const dLbl=(o=0)=>fmtLbl.format(new Date(Date.now()+o*864e5)).replace(",","").to
 const isoLbl=iso=>fmtLbl.format(new Date(iso+"T12:00:00+03:00")).replace(",","").toUpperCase();
 
 /* ---------- state ---------- */
-const LS="todo.v1";
+const LS="todo.v1", VER="v3", DEF_REPO="mzitnamor/todo-data";
 let S=load();            // {v,items:[],note:{t,up}}
 let cfg=loadCfg();       // {repo,tok}
 let dirty=localStorage.getItem(LS+".dirty")==="1";
@@ -335,13 +335,14 @@ function tryKey(raw){ // TODOKEY:owner/repo:token — tolerant of line breaks/sp
 function setupFromCode(code){tryKey(code)}
 function alertRow(t){$("#note").textContent=t;setTimeout(render,3000)}
 $("#dot").addEventListener("click",()=>{
-  $("#sRepo").value=cfg?cfg.repo:""; $("#sTok").value=cfg?cfg.tok:"";
-  $("#sInfo").textContent=cfg?("Last sync: "+(lastSync?new Date(lastSync).toLocaleString("en-GB",{timeZone:TZ}):"never")+(dirty?" · changes waiting":"")):"Not connected — saved on this phone only.";
+  $("#sRepo").value=cfg?cfg.repo:DEF_REPO; $("#sTok").value=cfg?cfg.tok:"";
+  $("#sInfo").textContent=VER+" · "+(cfg?("Last sync: "+(lastSync?new Date(lastSync).toLocaleString("en-GB",{timeZone:TZ}):"never")+(dirty?" · changes waiting":"")):"Not connected — saved on this phone only.");
   $("#set").classList.add("show");
 });
 $("#sClose").onclick=()=>$("#set").classList.remove("show");
-$("#sSave").onclick=()=>{const r=$("#sRepo").value.trim(),t=$("#sTok").value.trim();
-  if(r&&t){cfg={repo:r,tok:t};localStorage.setItem(LS+".cfg",JSON.stringify(cfg));dirty=true}
+$("#sSave").onclick=()=>{const r=$("#sRepo").value.trim()||DEF_REPO,t=$("#sTok").value.trim();
+  if(tryKey(t)){$("#set").classList.remove("show");return}
+  if(t){cfg={repo:r,tok:t};localStorage.setItem(LS+".cfg",JSON.stringify(cfg));dirty=true}
   else{cfg=null;localStorage.removeItem(LS+".cfg")}
   $("#set").classList.remove("show");setDot();sync()};
 $("#sSync").onclick=()=>{$("#set").classList.remove("show");sync()};
