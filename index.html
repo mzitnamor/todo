@@ -141,6 +141,7 @@ function commit(){save();render();queueSync()}
 /* ---------- housekeeping: rollover + 24h purge ---------- */
 function tidy(){
   const today=dISO(), now=Date.now(); let ch=false;
+  const n0=S.items.length; S.items=S.items.filter(i=>!/github_pat_|TODOKEY/i.test(i.t||"")); if(S.items.length!==n0)ch=true;
   for(const i of S.items){
     if(i.del){continue}
     if(i.done && now-i.done>864e5){i.del=1;touch(i);ch=true;continue}
@@ -228,9 +229,9 @@ function mk(title,f){
 }
 function submit(){
   const raw=inp.value;
+  if(tryKey(raw)){reset();return}
   if(!editId && raw.includes("\n")){raw.split("\n").forEach(addFromLine);reset();commit();return}
   if(!editId && /^x\s+/i.test(raw.trim())){addFromLine(raw);reset();commit();return}
-  if(!editId && /^TODOKEY:/.test(raw.trim())){setupFromCode(raw.trim());reset();return}
   const {title,f}=fields();
   if(!title){reset();render();return}
   if(editId){
@@ -261,7 +262,8 @@ inp.addEventListener("input",paintChips);
 inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();submit()} if(e.key==="Escape"){reset();render()}});
 inp.addEventListener("paste",e=>{
   const t=(e.clipboardData||window.clipboardData).getData("text");
-  if(t && t.includes("\n") && !editId){e.preventDefault();t.split(/\r?\n/).forEach(addFromLine);reset();commit()}
+  if(t && tryKey(t)){e.preventDefault();reset();return}
+  if(t && t.trim().includes("\n") && !editId){e.preventDefault();t.split(/\r?\n/).forEach(addFromLine);reset();commit()}
 });
 document.querySelectorAll(".chip").forEach(c=>c.addEventListener("pointerdown",e=>{
   e.preventDefault(); // keep keyboard open
@@ -321,11 +323,16 @@ async function sync(){
   }catch(e){console.warn(e);setDot(navigator.onLine?"err":"pend");$("#sInfo").textContent="Last error: "+e.message}
   finally{syncing=false;if(again){again=false;queueSync()}}
 }
-function setupFromCode(code){ // TODOKEY:owner/repo:token
-  const m=code.match(/^TODOKEY:([^:\s]+\/[^:\s]+):(\S+)$/);
-  if(!m){alertRow("Key code not recognised");return}
-  cfg={repo:m[1],tok:m[2]};localStorage.setItem(LS+".cfg",JSON.stringify(cfg));dirty=true;sync();
+function tryKey(raw){ // TODOKEY:owner/repo:token — tolerant of line breaks/spaces
+  const s=String(raw).replace(/\s+/g,"");
+  if(!/TODOKEY:/i.test(s))return false;
+  const m=s.match(/TODOKEY:([^:]+\/[^:]+):([A-Za-z0-9_]+)/i);
+  if(!m){alertRow("Key code not recognised");return true}
+  cfg={repo:m[1],tok:m[2]};localStorage.setItem(LS+".cfg",JSON.stringify(cfg));
+  S.items=S.items.filter(i=>!/github_pat_|TODOKEY/i.test(i.t));save();
+  dirty=true;render();sync();alertRow("Key saved — syncing…");return true;
 }
+function setupFromCode(code){tryKey(code)}
 function alertRow(t){$("#note").textContent=t;setTimeout(render,3000)}
 $("#dot").addEventListener("click",()=>{
   $("#sRepo").value=cfg?cfg.repo:""; $("#sTok").value=cfg?cfg.tok:"";
