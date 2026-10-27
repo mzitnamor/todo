@@ -353,7 +353,7 @@ window.addEventListener("online",()=>sync());
 window.addEventListener("offline",()=>setDot("pend"));
 document.addEventListener("visibilitychange",()=>{if(!document.hidden){render();sync()}});
 setInterval(()=>{if(!document.hidden&&document.activeElement!==inp){render();sync()}},25000);
-if("serviceWorker" in navigator && location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
+if("serviceWorker" in navigator && window.isSecureContext)navigator.serviceWorker.register("sw.js").catch(()=>{});
 render();setDot();sync();
 </script>
 </body>
