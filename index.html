@@ -122,7 +122,7 @@ const dLbl=(o=0)=>fmtLbl.format(new Date(Date.now()+o*864e5)).replace(",","").to
 const isoLbl=iso=>fmtLbl.format(new Date(iso+"T12:00:00+03:00")).replace(",","").toUpperCase();
 
 /* ---------- state ---------- */
-const LS="todo.v1", VER="v3", DEF_REPO="mzitnamor/todo-data";
+const LS="todo.v1", VER="v4", DEF_REPO="mzitnamor/todo-data";
 let S=load();            // {v,items:[],note:{t,up}}
 let cfg=loadCfg();       // {repo,tok}
 let dirty=localStorage.getItem(LS+".dirty")==="1";
@@ -284,6 +284,7 @@ $("#del").addEventListener("pointerdown",e=>{e.preventDefault();const i=S.items.
 /* ---------- GitHub sync ---------- */
 const enc=s=>btoa(String.fromCharCode(...new TextEncoder().encode(s)));
 const dec=b=>new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\n/g,"")),c=>c.charCodeAt(0)));
+let lastErr="";
 let syncing=false,again=false,qT=null;
 function queueSync(){clearTimeout(qT);qT=setTimeout(sync,1200);setDot()}
 function setDot(st){
@@ -308,7 +309,7 @@ async function sync(){
       const r=await fetch(url+"?t="+Date.now(),{headers:H,cache:"no-store"});
       let remote={v:1,items:[],note:{t:"",up:0}},sha;
       if(r.ok){const j=await r.json();sha=j.sha;remote=JSON.parse(dec(j.content))}
-      else if(r.status!==404)throw new Error("GET "+r.status);
+      else if(r.status!==404){let m="";try{m=(await r.json()).message||""}catch(_){}throw new Error("GET "+r.status+" "+m)}
       const wasDirty=dirty;
       S=merge(S,remote); tidy();
       if(canon(S)===canon(remote)){dirty=false;break}
@@ -316,11 +317,11 @@ async function sync(){
       const p=await fetch(url,{method:"PUT",headers:H,body:JSON.stringify(body)});
       if(p.ok){dirty=false;break}
       if(p.status===409||p.status===422){continue}
-      throw new Error("PUT "+p.status);
+      {let m="";try{m=(await p.json()).message||""}catch(_){}throw new Error("PUT "+p.status+" "+m)}
     }
-    lastSync=Date.now(); localStorage.setItem(LS+".last",lastSync);
+    lastErr="";lastSync=Date.now(); localStorage.setItem(LS+".last",lastSync);
     save(); if(document.activeElement!==inp)render(); setDot();
-  }catch(e){console.warn(e);setDot(navigator.onLine?"err":"pend");$("#sInfo").textContent="Last error: "+e.message}
+  }catch(e){console.warn(e);setDot(navigator.onLine?"err":"pend");lastErr=e.message+" @ "+new Date().toLocaleTimeString("en-GB",{timeZone:TZ});}
   finally{syncing=false;if(again){again=false;queueSync()}}
 }
 function tryKey(raw){ // TODOKEY:owner/repo:token — tolerant of line breaks/spaces
@@ -336,7 +337,7 @@ function setupFromCode(code){tryKey(code)}
 function alertRow(t){$("#note").textContent=t;setTimeout(render,3000)}
 $("#dot").addEventListener("click",()=>{
   $("#sRepo").value=cfg?cfg.repo:DEF_REPO; $("#sTok").value=cfg?cfg.tok:"";
-  $("#sInfo").textContent=VER+" · "+(cfg?("Last sync: "+(lastSync?new Date(lastSync).toLocaleString("en-GB",{timeZone:TZ}):"never")+(dirty?" · changes waiting":"")):"Not connected — saved on this phone only.");
+  $("#sInfo").textContent=VER+" · "+(cfg?("Last sync: "+(lastSync?new Date(lastSync).toLocaleString("en-GB",{timeZone:TZ}):"never")+(dirty?" · changes waiting":"")):"Not connected — saved on this phone only.")+(lastErr?"  ·  ERROR: "+lastErr:"");
   $("#set").classList.add("show");
 });
 $("#sClose").onclick=()=>$("#set").classList.remove("show");

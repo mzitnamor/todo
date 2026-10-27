@@ -1,5 +1,5 @@
 // Offline shell: network first, fall back to cache. GitHub API calls are never cached.
-const C = "todo-shell-v3";
+const C = "todo-shell-v4";
 const SHELL = ["./", "./index.html", "./manifest.json", "./icon-180.png", "./icon-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(C).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener("activate", e => {
