@@ -122,7 +122,7 @@ const dLbl=(o=0)=>fmtLbl.format(new Date(Date.now()+o*864e5)).replace(",","").to
 const isoLbl=iso=>fmtLbl.format(new Date(iso+"T12:00:00+03:00")).replace(",","").toUpperCase();
 
 /* ---------- state ---------- */
-const LS="todo.v1", VER="v4", DEF_REPO="mzitnamor/todo-data";
+const LS="todo.v1", VER="v5", DEF_REPO="mzitnamor/todo-data";
 let S=load();            // {v,items:[],note:{t,up}}
 let cfg=loadCfg();       // {repo,tok}
 let dirty=localStorage.getItem(LS+".dirty")==="1";
@@ -309,7 +309,7 @@ async function sync(){
       const r=await fetch(url+"?t="+Date.now(),{headers:H,cache:"no-store"});
       let remote={v:1,items:[],note:{t:"",up:0}},sha;
       if(r.ok){const j=await r.json();sha=j.sha;remote=JSON.parse(dec(j.content))}
-      else if(r.status!==404){let m="";try{m=(await r.json()).message||""}catch(_){}throw new Error("GET "+r.status+" "+m)}
+      else {let m="";try{m=(await r.json()).message||""}catch(_){}throw new Error("GET "+r.status+" "+m)}
       const wasDirty=dirty;
       S=merge(S,remote); tidy();
       if(canon(S)===canon(remote)){dirty=false;break}
