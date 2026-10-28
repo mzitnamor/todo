@@ -87,8 +87,8 @@ header .sp{flex:1}
 #del{display:none;font:700 11px var(--mono);color:var(--u2);padding:0 4px;height:36px;background:none;border:0}
 .editing #del{display:block}
 #inwrap{flex:1;position:relative;display:flex}
-#inwrap #in{padding-right:40px}
-#go{position:absolute;right:4px;top:50%;margin-top:-14px;width:28px;height:28px;border-radius:50%;border:0;padding:0;
+#inwrap #in{padding-right:66px}
+#go{position:absolute;right:4px;top:50%;margin-top:-14px;width:56px;height:28px;border-radius:14px;border:0;padding:0;
   background:#2a2a2a;color:#666;font:400 20px/28px -apple-system,system-ui,sans-serif;text-align:center;touch-action:manipulation;transition:background .12s,color .12s}
 #go.ready{background:var(--fg);color:#000}
 .editing #go{font:700 14px/28px var(--mono)}
@@ -134,8 +134,6 @@ header .sp{flex:1}
   <div class="k">Key (GitHub token)</div><input id="sTok" placeholder="github_pat_…" autocapitalize="off" autocorrect="off" type="password">
   <button id="sSave">SAVE</button><button id="sSync">SYNC NOW</button><button id="sClose">CLOSE</button>
   <div id="sInfo" style="margin-top:16px"></div>
-  <div id="sDiag" style="margin-top:14px;color:#666;font-size:11px"></div>
-  <div id="probe" style="position:fixed;left:0;width:0;top:env(safe-area-inset-top);bottom:env(safe-area-inset-bottom);visibility:hidden;pointer-events:none"></div>
 </div>
 
 <script>
@@ -149,7 +147,7 @@ const dLbl=(o=0)=>fmtLbl.format(new Date(Date.now()+o*864e5)).replace(",","").to
 const isoLbl=iso=>fmtLbl.format(new Date(iso+"T12:00:00+03:00")).replace(",","").toUpperCase();
 
 /* ---------- state ---------- */
-const LS="todo.v1", VER="v13", DEF_REPO="mzitnamor/todo-data";
+const LS="todo.v1", VER="v14", DEF_REPO="mzitnamor/todo-data";
 let S=load();            // {v,items:[],note:{t,up}}
 let cfg=loadCfg();       // {repo,tok}
 let dirty=localStorage.getItem(LS+".dirty")==="1";
@@ -427,8 +425,6 @@ $("#dot").addEventListener("click",()=>{
   $("#sRepo").value=cfg?cfg.repo:DEF_REPO; $("#sTok").value=cfg?cfg.tok:"";
   $("#sInfo").textContent=VER+" · "+(cfg?("Last sync: "+(lastSync?new Date(lastSync).toLocaleString("en-GB",{timeZone:TZ}):"never")+(dirty?" · changes waiting":"")):"Not connected — saved on this phone only.")+(lastErr?"  ·  ERROR: "+lastErr:"");
   $("#set").classList.add("show");
-  const pr=$("#probe").getBoundingClientRect(), vv=window.visualViewport, br=$("#bar").getBoundingClientRect();
-  $("#sDiag").textContent=`DIAG ih:${innerHeight} ch:${document.documentElement.clientHeight} vv:${vv?Math.round(vv.height)+"/"+Math.round(vv.offsetTop):"-"} scr:${screen.width}x${screen.height} safeT:${Math.round(pr.top)} safeB:${Math.round(innerHeight-pr.bottom)} bar:${Math.round(br.top)}-${Math.round(br.bottom)} sy:${Math.round(scrollY)} sa:${navigator.standalone?1:0} dpr:${devicePixelRatio}`;
 });
 $("#sClose").onclick=()=>$("#set").classList.remove("show");
 $("#sSave").onclick=()=>{const r=$("#sRepo").value.trim()||DEF_REPO,t=$("#sTok").value.trim();
