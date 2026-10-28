@@ -14,7 +14,7 @@
 <style>
 :root{
   --bg:#000; --fg:#e8e8e6; --dim:#6b6b68; --dimmer:#3a3a38; --line:#161616;
-  --tlg:#a9ad72; --cel:#f4b6c8; --bth:#b9a8ec;
+  --tlg:#5f9443; --cel:#f4b6c8; --bth:#b9a8ec;
   --dig:#4fd1e0; --u1:#ffad1f; --u2:#ff4545; --ok:#3ecf6e;
   --mono:ui-monospace,"SF Mono",Menlo,monospace;
 }
@@ -47,8 +47,9 @@ header .sp{flex:1}
 .u1 .ck::before{border-color:var(--u1);background:rgba(255,173,31,.18)}
 .u2 .ck::before{border-color:var(--u2);background:rgba(255,69,69,.3)}
 .done .ck::before{border-color:#4a4a48;background:#4a4a48}
-.tag{font:600 9.5px/1 var(--mono);letter-spacing:.04em;width:28px;flex:none}
-.tag.T{color:var(--tlg)} .tag.C{color:var(--cel)} .tag.B{color:var(--bth)}
+.tag{width:36px;flex:none;display:flex;align-items:center}
+.tag b{font:600 9px/1 var(--mono);letter-spacing:.04em;color:#d6d6d2;padding:2px 3px 2px 3.5px;border:1px solid var(--tc);border-radius:3px}
+.tag.T{--tc:var(--tlg)} .tag.C{--tc:var(--cel)} .tag.B{--tc:var(--bth)}
 .at{font:700 12px/1 var(--mono);color:var(--dig);width:13px;flex:none}
 .tt{flex:1;padding:5px 0;word-break:break-word}
 .u2 .tt{color:#ff8a8a}
@@ -84,14 +85,17 @@ header .sp{flex:1}
   -webkit-backdrop-filter:blur(10px);border-top:1px solid #222;padding:7px 10px calc(env(safe-area-inset-bottom) + 6px)}
 .kb #bar{padding-bottom:7px}
 #inrow{display:flex;gap:6px;align-items:center}
-#in{flex:1;background:#171717;border:1px solid #2a2a2a;border-radius:8px;color:var(--fg);
-  font:16px/1.2 -apple-system,system-ui,sans-serif;padding:7px 9px;outline:none;-webkit-user-select:text;user-select:text;resize:none;height:36px}
-#in:focus{border-color:#444}
+#in{flex:1;min-width:40px;background:none;border:0;color:var(--fg);
+  font:16px/1.2 -apple-system,system-ui,sans-serif;padding:7px 4px;outline:none;-webkit-user-select:text;user-select:text;height:34px}
 #del{display:none;font:700 11px var(--mono);color:var(--u2);padding:0 4px;height:36px;background:none;border:0}
 .editing #del{display:block}
-#inwrap{flex:1;position:relative;display:flex}
-#inwrap #in{padding-right:66px}
-#go{position:absolute;right:4px;top:50%;margin-top:-14px;width:56px;height:28px;border-radius:14px;border:0;padding:0;
+#inwrap{flex:1;min-width:0;display:flex;align-items:center;gap:3px;background:#171717;border:1px solid #2a2a2a;border-radius:8px;padding:0 3px 0 5px;min-height:36px}
+#inwrap:focus-within{border-color:#444}
+#pills{display:flex;gap:3px;flex:none}
+#pills:empty{display:none}
+.pill{--c:#cfcfcb;font:700 11px/1 var(--mono);padding:4px 5px;border-radius:5px;border:1px solid var(--c);color:var(--c);
+  background:color-mix(in srgb,var(--c) 13%,#171717);flex:none;touch-action:manipulation}
+#go{flex:none;width:56px;height:28px;border-radius:14px;border:0;padding:0;
   background:#2a2a2a;color:#666;font:400 20px/28px -apple-system,system-ui,sans-serif;text-align:center;touch-action:manipulation;transition:background .12s,color .12s}
 #go.ready{background:var(--fg);color:#000}
 .editing #go{font:700 14px/28px var(--mono)}
@@ -116,7 +120,7 @@ header .sp{flex:1}
 <main id="list"></main>
 
 <div id="bar">
-  <div id="inrow"><div id="inwrap"><input id="in" placeholder="Add…  (codes: c t b ! !! @ m a e tm s)" autocomplete="off" autocorrect="on" enterkeyhint="done"><button id="go" aria-label="Add">+</button></div><button id="del">DEL</button></div>
+  <div id="inrow"><div id="inwrap"><span id="pills"></span><input id="in" placeholder="Add…  (codes: c t b ! !! @ m a e tod tmr sb)" autocomplete="off" autocorrect="on" enterkeyhint="done"><button id="go" aria-label="Add">+</button></div><button id="del">DEL</button></div>
   <div id="chips">
     <div class="crow">
       <button class="chip" data-k="o" data-v="T" style="--c:var(--tlg)">TLG</button><button class="chip" data-k="o" data-v="C" style="--c:var(--cel)">CEL</button><button class="chip" data-k="o" data-v="B" style="--c:var(--bth)">BTH</button>
@@ -150,7 +154,7 @@ const dLbl=(o=0)=>fmtLbl.format(new Date(Date.now()+o*864e5)).replace(",","").to
 const isoLbl=iso=>fmtLbl.format(new Date(iso+"T12:00:00+03:00")).replace(",","").toUpperCase();
 
 /* ---------- state ---------- */
-const LS="todo.v1", VER="v16", DEF_REPO="mzitnamor/todo-data";
+const LS="todo.v1", VER="v17", DEF_REPO="mzitnamor/todo-data";
 let S=load();            // {v,items:[],note:{t,up}}
 let cfg=loadCfg();       // {repo,tok}
 let dirty=localStorage.getItem(LS+".dirty")==="1";
@@ -184,13 +188,31 @@ function tidy(){
 
 /* ---------- shorthand ---------- */
 const CODES={c:["o","C"],t:["o","T"],b:["o","B"],"!":["u",1],"!!":["u",2],"‼":["u",2],"@":["d",1],d:["d",1],
-  m:["s","m"],a:["s","a"],e:["s","e"],tm:["w","1"],s:["w","s"],stby:["w","s"],tod:["w","0"]};
+  m:["s","m"],a:["s","a"],e:["s","e"],tm:["w","1"],tmr:["w","1"],tomorrow:["w","1"],s:["w","s"],sb:["w","s"],stby:["w","s"],standby:["w","s"],
+  tod:["w","0"],today:["w","0"],morning:["s","m"],afternoon:["s","a"],evening:["s","e"]};
+const DEF={o:"",u:0,d:0,s:"",w:"0"}, PK=["o","u","d","w","s"];
+const PLBL={o:{T:"TLG",C:"CEL",B:"BTH"},u:{1:"!",2:"‼"},d:{1:"@"},w:{1:"TMR",s:"SB"},s:{m:"M",a:"A",e:"E"}};
+const PCOL={o:{T:"var(--tlg)",C:"var(--cel)",B:"var(--bth)"},u:{1:"var(--u1)",2:"var(--u2)"},d:{1:"var(--dig)"}};
+let pillOrder=[];
+function setMan(k,v){if(String(v)===String(DEF[k]))delete man[k];else man[k]=v;pillOrder=pillOrder.filter(x=>x!==k);if(String(v)!==String(DEF[k]))pillOrder.push(k)}
+// leading codes typed before the task text become boxed pills as soon as a space follows them
+function pillify(){
+  let v=inp.value,ch=false,m;
+  while((m=v.match(/^\s*(\S+)\s+/))&&CODES[m[1].toLowerCase()]){const [k,val]=CODES[m[1].toLowerCase()];setMan(k,val);v=v.slice(m[0].length);ch=true}
+  if(ch)inp.value=v;
+}
+function paintPills(){
+  const el=$("#pills");
+  el.innerHTML=pillOrder.map(k=>{const v=String(man[k]);const c=(PCOL[k]&&PCOL[k][v])||"#cfcfcb";return `<button class="pill" data-k="${k}" style="--c:${c}">${(PLBL[k]||{})[v]||v}</button>`}).join("");
+  inp.placeholder=pillOrder.length?"task…":"Add…  (codes: c t b ! !! @ m a e tod tmr sb)";
+}
 function parse(txt){
   const w=txt.trim().split(/\s+/); const f={};
+  while(w.length>1&&CODES[w[0].toLowerCase()]){const [a,b]=CODES[w[0].toLowerCase()]; if(!(a in f))f[a]=b; w.shift()}
   while(w.length>1){const k=w[w.length-1].toLowerCase(); if(!CODES[k])break; const [a,b]=CODES[k]; if(!(a in f))f[a]=b; w.pop()}
   return {title:w.join(" "),f};
 }
-function fields(){const p=parse(inp.value);return {title:p.title,f:Object.assign({o:"",u:0,d:0,s:"",w:"0"},p.f,man)}}
+function fields(){const p=parse(inp.value);return {title:p.title,f:Object.assign({},DEF,p.f,man)}}
 
 /* ---------- render ---------- */
 const $=s=>document.querySelector(s), list=$("#list"), inp=$("#in");
@@ -204,7 +226,7 @@ function sortRows(a,b){
 }
 function row(i,extra="",dk=""){
   return `<div class="row${i.u?" u"+i.u:""}${i.done?" done":""}${i.id===editId?" edit":""}" data-id="${i.id}"${dk?` data-drop="${dk}"`:""}>
-<span class="ck"></span><span class="tag ${i.o||""}">${i.o==="T"?"TLG":i.o==="C"?"CEL":i.o==="B"?"BTH":""}</span><span class="at">${i.d?"@":""}</span><span class="tt">${esc(i.t)}${i.late&&!i.done?'<span class="late">(LATE)</span>':""}${extra}</span><span class="hd"></span></div>`;
+<span class="ck"></span><span class="tag ${i.o||""}">${i.o?`<b>${i.o==="T"?"TLG":i.o==="C"?"CEL":"BTH"}</b>`:""}</span><span class="at">${i.d?"@":""}</span><span class="tt">${esc(i.t)}${i.late&&!i.done?'<span class="late">(LATE)</span>':""}${extra}</span><span class="hd"></span></div>`;
 }
 function dayBlock(items,cls,name,lbl,off){
   const open=items.filter(i=>!i.done).length;
@@ -237,6 +259,7 @@ function render(){
 function paintChips(){
   const {f}=fields();
   const go=$("#go"); go.textContent=editId?"✓":"+"; go.classList.toggle("ready",!!inp.value.trim());
+  paintPills();
   document.querySelectorAll(".chip").forEach(c=>{const k=c.dataset.k,v=c.dataset.v;c.classList.toggle("on",String(f[k])===v)});
   document.body.classList.toggle("editing",!!editId);
 }
@@ -272,11 +295,12 @@ function submit(){
   } else S.items.push(mk(title,f));
   reset();commit();
 }
-function reset(){inp.value="";man={};editId=null;inp.blur();paintChips()}
+function reset(){inp.value="";man={};pillOrder=[];editId=null;inp.blur();paintChips()}
 function startEdit(i){
   editId=i.id;
   const w=!i.day?"s":i.day===dISO(1)?"1":"0";
   man={o:i.o||"",u:i.u||0,d:i.d||0,s:i.slot||"",w};
+  pillOrder=PK.filter(k=>String(man[k])!==String(DEF[k]));
   inp.value=i.t; render(); inp.focus();
 }
 
@@ -312,10 +336,14 @@ list.addEventListener("click",e=>{
   if(editId===i.id){reset();render();return}
   i.done=i.done?null:Date.now(); touch(i); commit();
 });
-inp.addEventListener("input",paintChips);
+inp.addEventListener("input",()=>{pillify();paintChips()});
+$("#pills").addEventListener("pointerdown",e=>{const b=e.target.closest(".pill");if(!b)return;e.preventDefault();const k=b.dataset.k;setMan(k,DEF[k]);paintChips()});
+$("#pills").addEventListener("touchstart",e=>e.preventDefault(),{passive:false});
 inp.addEventListener("focus",()=>document.body.classList.add("kb"));
 inp.addEventListener("blur",()=>document.body.classList.remove("kb"));
-inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();submit()} if(e.key==="Escape"){reset();render()}});
+inp.addEventListener("keydown",e=>{
+  if(e.key==="Backspace"&&inp.selectionStart===0&&inp.selectionEnd===0&&pillOrder.length){e.preventDefault();const k=pillOrder[pillOrder.length-1];setMan(k,DEF[k]);paintChips();return}
+  if(e.key==="Enter"){e.preventDefault();submit()} if(e.key==="Escape"){reset();render()}});
 inp.addEventListener("paste",e=>{
   const t=(e.clipboardData||window.clipboardData).getData("text");
   if(t && tryKey(t)){e.preventDefault();reset();return}
@@ -327,7 +355,7 @@ document.querySelectorAll(".chip").forEach(c=>c.addEventListener("pointerdown",e
   const {f}=fields(); const def={o:"",u:0,d:0,s:"",w:"0"}[k];
   // strip code from text for this key, then toggle
   const p=parse(inp.value); if(k in p.f){inp.value=stripKey(inp.value,k)}
-  man[k]=(String(f[k])===String(v))?def:v;
+  setMan(k,(String(f[k])===String(v))?def:v);
   paintChips();
 }));
 function stripKey(txt,k){
