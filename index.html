@@ -72,13 +72,13 @@ header .sp{flex:1}
   box-shadow:0 8px 24px rgba(0,0,0,.7);transform:scale(1.02)}
 .dragging{-webkit-user-select:none;user-select:none}
 .dragging #bar{visibility:hidden}
-#trash{display:none;position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 26px);width:64px;height:64px;margin-left:-32px;border-radius:50%;
+#trash{display:none;position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 26px - var(--gap,0px));width:64px;height:64px;margin-left:-32px;border-radius:50%;
   align-items:center;justify-content:center;color:#bbb;background:#1a1a1a;border:1px solid #333;z-index:15;transition:transform .12s,background .12s}
 .dragging #trash{display:flex}
 #trash.hov{background:var(--u2);color:#fff;border-color:var(--u2);transform:scale(1.25)}
 /* bottom bar */
-#bar{position:fixed;left:0;right:0;bottom:0;background:rgba(10,10,10,.96);backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);border-top:1px solid #222;padding:7px 10px calc(env(safe-area-inset-bottom) + 6px)}
+#bar{position:fixed;left:0;right:0;bottom:calc(-1 * var(--gap,0px));background:rgba(10,10,10,.96);backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);border-top:1px solid #222;padding:7px 10px max(8px,calc(env(safe-area-inset-bottom) - 12px))}
 #inrow{display:flex;gap:6px;align-items:center}
 #in{flex:1;background:#171717;border:1px solid #2a2a2a;border-radius:8px;color:var(--fg);
   font:16px/1.2 -apple-system,system-ui,sans-serif;padding:7px 9px;outline:none;-webkit-user-select:text;user-select:text;resize:none;height:36px}
@@ -146,7 +146,7 @@ const dLbl=(o=0)=>fmtLbl.format(new Date(Date.now()+o*864e5)).replace(",","").to
 const isoLbl=iso=>fmtLbl.format(new Date(iso+"T12:00:00+03:00")).replace(",","").toUpperCase();
 
 /* ---------- state ---------- */
-const LS="todo.v1", VER="v9", DEF_REPO="mzitnamor/todo-data";
+const LS="todo.v1", VER="v10", DEF_REPO="mzitnamor/todo-data";
 let S=load();            // {v,items:[],note:{t,up}}
 let cfg=loadCfg();       // {repo,tok}
 let dirty=localStorage.getItem(LS+".dirty")==="1";
@@ -430,6 +430,21 @@ $("#sSave").onclick=()=>{const r=$("#sRepo").value.trim()||DEF_REPO,t=$("#sTok")
   else{cfg=null;localStorage.removeItem(LS+".cfg")}
   $("#set").classList.remove("show");setDot();sync()};
 $("#sSync").onclick=()=>{$("#set").classList.remove("show");sync()};
+
+/* ---------- iOS home-screen gap fix ----------
+   With a translucent status bar, iOS can shorten the app viewport by the status-bar height,
+   leaving a dead strip at the bottom. Measure it and push the bottom bar into it. */
+function fixGap(){
+  let g=0;
+  if(navigator.standalone||matchMedia("(display-mode: standalone)").matches){
+    const portrait=innerHeight>innerWidth, full=portrait?Math.max(screen.height,screen.width):Math.min(screen.height,screen.width);
+    const vv=window.visualViewport, kb=vv&&(innerHeight-vv.height>120); // keyboard open: leave alone
+    if(!kb)g=Math.max(0,Math.min(80,full-innerHeight));
+  }
+  document.documentElement.style.setProperty("--gap",g+"px");
+}
+fixGap(); addEventListener("resize",fixGap); addEventListener("orientationchange",()=>setTimeout(fixGap,300));
+if(window.visualViewport)visualViewport.addEventListener("resize",fixGap);
 
 /* ---------- lifecycle ---------- */
 window.addEventListener("online",()=>sync());
