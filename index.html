@@ -81,7 +81,7 @@ header .sp{flex:1}
 .dragging #trash{display:flex}
 #trash.hov{background:var(--u2);color:#fff;border-color:var(--u2);transform:scale(1.25)}
 /* bottom bar */
-#bar{position:fixed;left:0;right:0;bottom:0;background:rgba(10,10,10,.96);backdrop-filter:blur(10px);
+#bar{position:fixed;left:0;right:0;bottom:0;z-index:5;will-change:transform;transition:transform .18s ease-out,opacity .12s;background:rgba(10,10,10,.96);backdrop-filter:blur(10px);
   -webkit-backdrop-filter:blur(10px);border-top:1px solid #222;padding:7px 10px calc(env(safe-area-inset-bottom) + 6px)}
 .kb #bar{padding-bottom:7px}
 #inrow{display:flex;gap:6px;align-items:center}
@@ -154,7 +154,7 @@ const dLbl=(o=0)=>fmtLbl.format(new Date(Date.now()+o*864e5)).replace(",","").to
 const isoLbl=iso=>fmtLbl.format(new Date(iso+"T12:00:00+03:00")).replace(",","").toUpperCase();
 
 /* ---------- state ---------- */
-const LS="todo.v1", VER="v18", DEF_REPO="mzitnamor/todo-data";
+const LS="todo.v1", VER="v19", DEF_REPO="mzitnamor/todo-data";
 let S=load();            // {v,items:[],note:{t,up}}
 let cfg=loadCfg();       // {repo,tok}
 let dirty=localStorage.getItem(LS+".dirty")==="1";
@@ -301,7 +301,7 @@ function startEdit(i){
   const w=!i.day?"s":i.day===dISO(1)?"1":"0";
   man={o:i.o||"",u:i.u||0,d:i.d||0,s:i.slot||"",w};
   pillOrder=PK.filter(k=>String(man[k])!==String(DEF[k]));
-  inp.value=i.t; render(); inp.focus();
+  inp.value=i.t; render(); liftFocus();
 }
 
 // tapping anywhere outside the bottom bar closes the keyboard (and cancels an edit); that tap does nothing else
@@ -367,7 +367,7 @@ $("#go").addEventListener("click",e=>{e.preventDefault();submit()});
 // keep the keyboard open when tapping chips / + on iPhone
 // (pointerdown has already fired by touchstart, so only block the focus loss here)
 document.querySelectorAll(".chip,#del").forEach(b=>b.addEventListener("touchstart",e=>e.preventDefault(),{passive:false}));
-$("#go").addEventListener("touchstart",e=>{e.preventDefault();const was=!editId;submit();if(was)inp.focus()},{passive:false});
+$("#go").addEventListener("touchstart",e=>{e.preventDefault();const was=!editId;submit();if(was)liftFocus()},{passive:false});
 $("#del").addEventListener("pointerdown",e=>{e.preventDefault();const i=S.items.find(x=>x.id===editId);if(i){i.del=1;touch(i)}reset();commit()});
 
 /* ---------- drag to reschedule / delete ---------- */
@@ -487,6 +487,35 @@ $("#sSave").onclick=()=>{const r=$("#sRepo").value.trim()||DEF_REPO,t=$("#sTok")
   else{cfg=null;localStorage.removeItem(LS+".cfg")}
   $("#set").classList.remove("show");setDot();sync()};
 $("#sSync").onclick=()=>{$("#set").classList.remove("show");sync()};
+
+/* ---------- keyboard: lift only the bottom panel, keep the list still ----------
+   iOS normally pans the whole page up so the focused field clears the keyboard.
+   Trick: just before focusing, park the panel (invisible) high on screen where the keyboard
+   won't cover it, so iOS has no reason to pan; then pin the panel to the top of the keyboard
+   using visualViewport. The list stays where it was; the panel slides over it. */
+const bar=$("#bar"); let lockY=null, lockT=0, parking=false;
+function placeBar(){
+  const vv=window.visualViewport; if(!vv)return;
+  const off=Math.max(0,innerHeight-(vv.height+vv.offsetTop));
+  if(parking&&off<80)return;            // keyboard not up yet
+  parking=false;
+  bar.style.transform=off?`translateY(${-off}px)`:""; bar.style.opacity="";
+}
+if(window.visualViewport){visualViewport.addEventListener("resize",placeBar);visualViewport.addEventListener("scroll",placeBar)}
+addEventListener("scroll",()=>{if(lockY!==null&&Date.now()<lockT&&Math.abs(scrollY-lockY)>1)scrollTo(0,lockY)},{passive:true});
+function liftFocus(){
+  if(document.activeElement===inp)return;
+  lockY=scrollY; lockT=Date.now()+1200; parking=true;
+  bar.style.transition="none"; bar.style.opacity="0";
+  bar.style.transform=`translateY(${-Math.round(innerHeight*0.62)}px)`;
+  void bar.offsetHeight; bar.style.transition="";
+  try{inp.focus({preventScroll:true})}catch(_){inp.focus()}
+  setTimeout(()=>{if(parking){parking=false;placeBar();bar.style.opacity=""}},900); // fallback
+}
+let tStart=null;
+inp.addEventListener("touchstart",e=>{if(document.activeElement!==inp){e.preventDefault();tStart=[e.touches[0].clientX,e.touches[0].clientY]}},{passive:false});
+inp.addEventListener("touchend",e=>{if(!tStart)return;const t=e.changedTouches[0];const moved=Math.hypot(t.clientX-tStart[0],t.clientY-tStart[1])>10;tStart=null;if(!moved){e.preventDefault();liftFocus()}},{passive:false});
+inp.addEventListener("blur",()=>{lockY=null;setTimeout(placeBar,50)});
 
 /* ---------- lifecycle ---------- */
 window.addEventListener("online",()=>sync());
