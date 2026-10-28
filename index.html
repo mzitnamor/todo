@@ -72,7 +72,8 @@ header .sp{flex:1}
 .slot.hov{color:var(--dig)} .dz.hov{border-color:var(--dig);color:var(--dig);background:rgba(79,209,224,.07)}
 #stbyH.hov h2{color:var(--dig)!important}
 .row.src{opacity:.25}
-.ghost{position:fixed;z-index:20;pointer-events:none;background:#1b1b1b;border:1px solid #3a3a3a;border-radius:7px;padding:0 4px;
+#ins{display:none;position:fixed;left:40px;right:12px;height:2px;border-radius:1px;background:var(--dig);box-shadow:0 0 6px var(--dig);z-index:21;pointer-events:none}
+.ghost{position:fixed;z-index:20;pointer-events:none;opacity:.88;background:#1b1b1b;border:1px solid #3a3a3a;border-radius:7px;padding:0 4px;
   box-shadow:0 8px 24px rgba(0,0,0,.7);transform:scale(1.02)}
 .dragging{-webkit-user-select:none;user-select:none}
 .dragging #bar{visibility:hidden}
@@ -115,9 +116,9 @@ header .sp{flex:1}
 </style>
 </head>
 <body>
-<header><b>TO-DO</b><span class="sp"></span><span id="cnt"></span><span id="dot" title="sync"></span></header>
+<div id="page"><header><b>TO-DO</b><span class="sp"></span><span id="cnt"></span><span id="dot" title="sync"></span></header>
 <div id="note"></div>
-<main id="list"></main>
+<main id="list"></main></div>
 
 <div id="bar">
   <div id="inrow"><div id="inwrap"><span id="pills"></span><input id="in" placeholder="Add…  (codes: tlg cel bth ! !! @ m a e tod tmr sb)" autocomplete="off" autocorrect="on" enterkeyhint="done"><button id="go" aria-label="Add">+</button></div><button id="del">DEL</button></div>
@@ -154,7 +155,7 @@ const dLbl=(o=0)=>fmtLbl.format(new Date(Date.now()+o*864e5)).replace(",","").to
 const isoLbl=iso=>fmtLbl.format(new Date(iso+"T12:00:00+03:00")).replace(",","").toUpperCase();
 
 /* ---------- state ---------- */
-const LS="todo.v1", VER="v20", DEF_REPO="mzitnamor/todo-data";
+const LS="todo.v1", VER="v22", DEF_REPO="mzitnamor/todo-data";
 let S=load();            // {v,items:[],note:{t,up}}
 let cfg=loadCfg();       // {repo,tok}
 let dirty=localStorage.getItem(LS+".dirty")==="1";
@@ -221,8 +222,7 @@ const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&qu
 function sortRows(a,b){
   if(!!a.done!==!!b.done)return a.done?1:-1;
   if(a.done)return a.done-b.done;
-  if((b.u||0)!==(a.u||0))return (b.u||0)-(a.u||0);
-  return (a.cr||0)-(b.cr||0);
+  return (a.ord??a.cr??0)-(b.ord??b.cr??0);   // manual order (drag); new items go to the end, urgent ones to the top
 }
 function row(i,extra="",dk=""){
   return `<div class="row${i.u?" u"+i.u:""}${i.done?" done":""}${i.id===editId?" edit":""}" data-id="${i.id}"${dk?` data-drop="${dk}"`:""}>
@@ -278,6 +278,8 @@ function addFromLine(line){
 }
 function mk(title,f){
   const i={id:uid(),t:title,o:f.o||"",u:+f.u||0,d:+f.d||0,slot:f.s||"",day:f.w==="s"?null:dISO(+f.w||0),done:null,late:0,cr:Date.now()};
+  i.ord=i.cr;
+  if(i.u){const sib=live().filter(x=>!x.done&&x.day===i.day&&(x.slot||"")===i.slot); if(sib.length)i.ord=Math.min(...sib.map(x=>x.ord??x.cr))-1000}
   touch(i);return i;
 }
 function submit(){
@@ -372,7 +374,8 @@ $("#del").addEventListener("pointerdown",e=>{e.preventDefault();const i=S.items.
 
 /* ---------- drag to reschedule / delete ---------- */
 let drag=null;
-const trash=$("#trash");
+const trash=$("#trash"), page=$("#page");
+const ins=document.createElement("div"); ins.id="ins"; document.body.appendChild(ins);
 list.addEventListener("pointerdown",e=>{
   const h=e.target.closest(".hd"); if(!h)return;
   e.preventDefault();
@@ -381,8 +384,10 @@ list.addEventListener("pointerdown",e=>{
   const rc=r.getBoundingClientRect();
   const g=r.cloneNode(true); g.classList.add("ghost"); g.style.width=rc.width+"px"; g.style.left=rc.left+"px";
   document.body.appendChild(g);
-  drag={id:r.dataset.id,src:r,ghost:g,dy:e.clientY-rc.top,x:e.clientX,y:e.clientY,over:null,pending:false,raf:0};
+  drag={id:r.dataset.id,src:r,ghost:g,dy:e.clientY-rc.top,x:e.clientX,y:e.clientY,y0:e.clientY,over:null,pending:false,raf:0};
   r.classList.add("src"); document.body.classList.add("dragging");
+  // drop zones for empty slots appear now; keep the dragged row under the finger
+  drag.shift=Math.max(0,r.getBoundingClientRect().top-rc.top); if(drag.shift)page.style.transform=`translateY(${-drag.shift}px)`;
   moveGhost(); drag.raf=requestAnimationFrame(autoScroll);
 });
 function moveGhost(){ if(!drag)return; drag.ghost.style.top=(drag.y-drag.dy)+"px"; hitTest() }
@@ -391,6 +396,19 @@ function hitTest(){
   const tr=trash.getBoundingClientRect();
   if(drag.y>tr.top-20) k="trash";
   else{ const el=document.elementFromPoint(Math.min(Math.max(drag.x,20),innerWidth-20),drag.y); const d=el&&el.closest("[data-drop]"); if(d)k=d.dataset.drop }
+  // insertion point inside the target slot
+  let before=null, lineY=null;
+  if(k&&k!=="trash"){
+    const rows=[...list.querySelectorAll(`.row[data-drop="${k}"]:not(.done):not(.src)`)];
+    const hdr=document.querySelector(`.slot[data-drop="${k}"]`);
+    if(rows.length){
+      const nxt=rows.find(r=>{const b=r.getBoundingClientRect();return drag.y<b.top+b.height/2});
+      if(nxt){before=nxt.dataset.id;lineY=nxt.getBoundingClientRect().top}
+      else{before=null;lineY=rows[rows.length-1].getBoundingClientRect().bottom}
+    }
+  }
+  drag.before=before;
+  if(lineY!==null){ins.style.display="block";ins.style.top=(lineY-1)+"px"} else ins.style.display="none";
   if(k===drag.over)return; drag.over=k;
   document.querySelectorAll(".hov").forEach(x=>x.classList.remove("hov"));
   if(k==="trash")trash.classList.add("hov");
@@ -399,21 +417,32 @@ function hitTest(){
 function autoScroll(){
   if(!drag)return;
   const tr=trash.getBoundingClientRect().top;
-  let v=0; if(drag.y<90)v=-(90-drag.y)/6; else if(drag.y>tr-110&&drag.y<tr-20)v=(drag.y-(tr-110))/6;
-  if(v){window.scrollBy(0,v);hitTest()}
+  let v=0; const moved=Math.abs(drag.y-drag.y0)>20; if(moved&&drag.y<60)v=-(60-drag.y)/5; else if(drag.y>tr-110&&drag.y<tr-20)v=(drag.y-(tr-110))/6;
+  if(v<0&&drag.shift>0){drag.shift=Math.max(0,drag.shift+v);page.style.transform=drag.shift?`translateY(${-drag.shift}px)`:"";hitTest()}
+  else if(v){window.scrollBy(0,v);hitTest()}
   drag.raf=requestAnimationFrame(autoScroll);
 }
 window.addEventListener("pointermove",e=>{if(!drag)return;e.preventDefault();drag.x=e.clientX;drag.y=e.clientY;moveGhost()},{passive:false});
 function endDrag(apply){
   if(!drag)return;
   const d=drag; drag=null; cancelAnimationFrame(d.raf);
-  d.ghost.remove(); document.body.classList.remove("dragging");
+  d.ghost.remove(); document.body.classList.remove("dragging"); ins.style.display="none"; page.style.transform="";
   document.querySelectorAll(".hov").forEach(x=>x.classList.remove("hov"));
   const i=S.items.find(x=>x.id===d.id);
   if(apply&&i&&d.over){
     if(d.over==="trash"){i.del=1;touch(i)}
     else{const [w,sl]=d.over.split("|"); const nd=w==="s"?null:dISO(+w);
-      if(nd!==i.day||sl!==(i.slot||"")){ if(nd!==i.day)i.late=0; i.day=nd;i.slot=sl;touch(i) }}
+      if(nd!==i.day)i.late=0;
+      // new position among the open items of the target slot
+      const sib=live().filter(x=>x!==i&&!x.done&&x.day===nd&&(x.slot||"")===sl).sort(sortRows);
+      const ix=d.before?sib.findIndex(x=>x.id===d.before):sib.length;
+      const o=x=>x.ord??x.cr??0;
+      let ord;
+      if(!sib.length)ord=o(i);
+      else if(ix<=0)ord=o(sib[0])-1000;
+      else if(ix>=sib.length)ord=o(sib[sib.length-1])+1000;
+      else ord=(o(sib[ix-1])+o(sib[ix]))/2;
+      i.day=nd;i.slot=sl;i.ord=ord;touch(i) }
     commit(); return;
   }
   render();
