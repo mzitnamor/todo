@@ -147,7 +147,7 @@ const dLbl=(o=0)=>fmtLbl.format(new Date(Date.now()+o*864e5)).replace(",","").to
 const isoLbl=iso=>fmtLbl.format(new Date(iso+"T12:00:00+03:00")).replace(",","").toUpperCase();
 
 /* ---------- state ---------- */
-const LS="todo.v1", VER="v14", DEF_REPO="mzitnamor/todo-data";
+const LS="todo.v1", VER="v15", DEF_REPO="mzitnamor/todo-data";
 let S=load();            // {v,items:[],note:{t,up}}
 let cfg=loadCfg();       // {repo,tok}
 let dirty=localStorage.getItem(LS+".dirty")==="1";
@@ -277,6 +277,15 @@ function startEdit(i){
   inp.value=i.t; render(); inp.focus();
 }
 
+// tapping anywhere outside the bottom bar closes the keyboard (and cancels an edit); that tap does nothing else
+let swallow=false;
+document.addEventListener("pointerdown",e=>{
+  if(document.activeElement!==inp||e.target.closest("#bar")||e.target.closest("#set"))return;
+  swallow=true; e.preventDefault(); e.stopPropagation();
+  if(editId){reset();render()} else inp.blur();
+  setTimeout(()=>swallow=false,450);
+},true);
+document.addEventListener("click",e=>{if(swallow){e.preventDefault();e.stopPropagation()}},true);
 list.addEventListener("click",e=>{
   if(e.target.closest("#stbyH")){stbyOpen=!stbyOpen;render();return}
   if(e.target.closest(".hd"))return;
