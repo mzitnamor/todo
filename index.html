@@ -85,6 +85,9 @@ header .sp{flex:1}
 #in:focus{border-color:#444}
 #del{display:none;font:700 11px var(--mono);color:var(--u2);padding:0 4px;height:36px;background:none;border:0}
 .editing #del{display:block}
+#go{flex:none;width:44px;height:36px;border-radius:8px;border:1px solid #333;background:#1c1c1c;color:#777;font:300 26px/1 -apple-system,system-ui,sans-serif;padding-bottom:3px;touch-action:manipulation}
+#go.ready{background:var(--fg);color:#000;border-color:var(--fg)}
+.editing #go{font:700 17px/1 var(--mono);padding:0}
 #chips{margin-top:7px;display:flex;flex-direction:column;gap:6px}
 .crow{display:flex;gap:5px}
 .chip{--c:#cfcfcb;flex:1 1 0;min-width:0;height:40px;border-radius:9px;font:700 13px/1 var(--mono);letter-spacing:.02em;
@@ -106,7 +109,7 @@ header .sp{flex:1}
 <main id="list"></main>
 
 <div id="bar">
-  <div id="inrow"><input id="in" placeholder="Add…  (codes: c t b ! !! @ m a e tm s)" autocomplete="off" autocorrect="on" enterkeyhint="done"><button id="del">DEL</button></div>
+  <div id="inrow"><input id="in" placeholder="Add…  (codes: c t b ! !! @ m a e tm s)" autocomplete="off" autocorrect="on" enterkeyhint="done"><button id="del">DEL</button><button id="go" aria-label="Add">+</button></div>
   <div id="chips">
     <div class="crow">
       <button class="chip" data-k="o" data-v="T" style="--c:var(--tlg)">TLG</button><button class="chip" data-k="o" data-v="C" style="--c:var(--cel)">CEL</button><button class="chip" data-k="o" data-v="B" style="--c:var(--bth)">BTH</button>
@@ -140,7 +143,7 @@ const dLbl=(o=0)=>fmtLbl.format(new Date(Date.now()+o*864e5)).replace(",","").to
 const isoLbl=iso=>fmtLbl.format(new Date(iso+"T12:00:00+03:00")).replace(",","").toUpperCase();
 
 /* ---------- state ---------- */
-const LS="todo.v1", VER="v7", DEF_REPO="mzitnamor/todo-data";
+const LS="todo.v1", VER="v8", DEF_REPO="mzitnamor/todo-data";
 let S=load();            // {v,items:[],note:{t,up}}
 let cfg=loadCfg();       // {repo,tok}
 let dirty=localStorage.getItem(LS+".dirty")==="1";
@@ -226,6 +229,7 @@ function render(){
 }
 function paintChips(){
   const {f}=fields();
+  const go=$("#go"); go.textContent=editId?"✓":"+"; go.classList.toggle("ready",!!inp.value.trim());
   document.querySelectorAll(".chip").forEach(c=>{const k=c.dataset.k,v=c.dataset.v;c.classList.toggle("on",String(f[k])===v)});
   document.body.classList.toggle("editing",!!editId);
 }
@@ -299,6 +303,11 @@ function stripKey(txt,k){
   for(let j=w.length-1;j>=0;j--){const c=CODES[w[j].toLowerCase()]; if(tail&&j>0&&c){if(c[0]===k)continue;out.unshift(w[j])}else{tail=false;out.unshift(w[j])}}
   return out.join(" ");
 }
+$("#go").addEventListener("click",e=>{e.preventDefault();submit()});
+// keep the keyboard open when tapping chips / + on iPhone
+// (pointerdown has already fired by touchstart, so only block the focus loss here)
+document.querySelectorAll(".chip,#del").forEach(b=>b.addEventListener("touchstart",e=>e.preventDefault(),{passive:false}));
+$("#go").addEventListener("touchstart",e=>{e.preventDefault();const was=!editId;submit();if(was)inp.focus()},{passive:false});
 $("#del").addEventListener("pointerdown",e=>{e.preventDefault();const i=S.items.find(x=>x.id===editId);if(i){i.del=1;touch(i)}reset();commit()});
 
 /* ---------- drag to reschedule / delete ---------- */
