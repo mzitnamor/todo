@@ -21,7 +21,7 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--bg);color:var(--fg)}
 body{font:14px/1.25 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
-  padding:calc(env(safe-area-inset-top) + 6px) 12px calc(env(safe-area-inset-bottom) + 96px);
+  padding:calc(env(safe-area-inset-top) + 6px) 12px calc(env(safe-area-inset-bottom) + 150px);
   -webkit-user-select:none;user-select:none;overflow-x:hidden}
 header{display:flex;align-items:center;gap:8px;height:22px;margin-bottom:4px}
 header b{font:700 11px/1 var(--mono);letter-spacing:.14em;color:var(--dim)}
@@ -67,14 +67,13 @@ header .sp{flex:1}
 #in:focus{border-color:#444}
 #del{display:none;font:700 11px var(--mono);color:var(--u2);padding:0 4px;height:36px;background:none;border:0}
 .editing #del{display:block}
-#chips{display:flex;gap:2px;margin-top:6px;overflow-x:auto;scrollbar-width:none}
-#chips::-webkit-scrollbar{display:none}
-.chip{font:600 10.5px/1 var(--mono);color:#777;border:1px solid #2c2c2c;border-radius:5px;padding:7px 4.5px;flex:none;background:none}
-.sep{width:1px;background:#2a2a2a;margin:2px 1px;flex:none}
-.chip.on{color:#000;border-color:transparent;background:#ddd}
-.chip.on[data-k=o][data-v=T]{background:var(--tlg)} .chip.on[data-k=o][data-v=C]{background:var(--cel)}
-.chip.on[data-k=o][data-v=B]{background:var(--bth)} .chip.on[data-k=d]{background:var(--dig)}
-.chip.on[data-k=u][data-v="1"]{background:var(--u1)} .chip.on[data-k=u][data-v="2"]{background:var(--u2)}
+#chips{margin-top:7px;display:flex;flex-direction:column;gap:6px}
+.crow{display:flex;gap:5px}
+.chip{--c:#cfcfcb;flex:1 1 0;min-width:0;height:40px;border-radius:9px;font:700 13px/1 var(--mono);letter-spacing:.02em;
+  color:color-mix(in srgb,var(--c) 78%,#000);background:color-mix(in srgb,var(--c) 9%,#0a0a0a);
+  border:1px solid color-mix(in srgb,var(--c) 26%,#0a0a0a);touch-action:manipulation}
+.chip.g{margin-left:9px}
+.chip.on{color:#000;background:var(--c);border-color:var(--c)}
 /* settings */
 #set{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9;padding:calc(env(safe-area-inset-top) + 40px) 20px;font:12px/1.5 var(--mono);color:#aaa}
 #set.show{display:block}
@@ -91,15 +90,15 @@ header .sp{flex:1}
 <div id="bar">
   <div id="inrow"><input id="in" placeholder="Add…  (codes: c t b ! !! @ m a e tm s)" autocomplete="off" autocorrect="on" enterkeyhint="done"><button id="del">DEL</button></div>
   <div id="chips">
-    <button class="chip" data-k="o" data-v="T">TLG</button><button class="chip" data-k="o" data-v="C">CEL</button><button class="chip" data-k="o" data-v="B">BTH</button>
-    <span class="sep"></span>
-    <button class="chip" data-k="u" data-v="1">!</button><button class="chip" data-k="u" data-v="2">‼</button>
-    <span class="sep"></span>
-    <button class="chip" data-k="d" data-v="1">@</button>
-    <span class="sep"></span>
-    <button class="chip" data-k="s" data-v="">ANY</button><button class="chip" data-k="s" data-v="m">M</button><button class="chip" data-k="s" data-v="a">A</button><button class="chip" data-k="s" data-v="e">E</button>
-    <span class="sep"></span>
-    <button class="chip" data-k="w" data-v="0">TOD</button><button class="chip" data-k="w" data-v="1">TMR</button><button class="chip" data-k="w" data-v="s">SB</button>
+    <div class="crow">
+      <button class="chip" data-k="o" data-v="T" style="--c:var(--tlg)">TLG</button><button class="chip" data-k="o" data-v="C" style="--c:var(--cel)">CEL</button><button class="chip" data-k="o" data-v="B" style="--c:var(--bth)">BTH</button>
+      <button class="chip g" data-k="u" data-v="1" style="--c:var(--u1)">!</button><button class="chip" data-k="u" data-v="2" style="--c:var(--u2)">‼</button>
+      <button class="chip g" data-k="d" data-v="1" style="--c:var(--dig)">@</button>
+    </div>
+    <div class="crow">
+      <button class="chip" data-k="s" data-v="">ANY</button><button class="chip" data-k="s" data-v="m">M</button><button class="chip" data-k="s" data-v="a">A</button><button class="chip" data-k="s" data-v="e">E</button>
+      <button class="chip g" data-k="w" data-v="0">TOD</button><button class="chip" data-k="w" data-v="1">TMR</button><button class="chip" data-k="w" data-v="s">SB</button>
+    </div>
   </div>
 </div>
 
@@ -122,7 +121,7 @@ const dLbl=(o=0)=>fmtLbl.format(new Date(Date.now()+o*864e5)).replace(",","").to
 const isoLbl=iso=>fmtLbl.format(new Date(iso+"T12:00:00+03:00")).replace(",","").toUpperCase();
 
 /* ---------- state ---------- */
-const LS="todo.v1", VER="v5", DEF_REPO="mzitnamor/todo-data";
+const LS="todo.v1", VER="v6", DEF_REPO="mzitnamor/todo-data";
 let S=load();            // {v,items:[],note:{t,up}}
 let cfg=loadCfg();       // {repo,tok}
 let dirty=localStorage.getItem(LS+".dirty")==="1";
