@@ -85,9 +85,12 @@ header .sp{flex:1}
 #in:focus{border-color:#444}
 #del{display:none;font:700 11px var(--mono);color:var(--u2);padding:0 4px;height:36px;background:none;border:0}
 .editing #del{display:block}
-#go{flex:none;width:44px;height:36px;border-radius:8px;border:1px solid #333;background:#1c1c1c;color:#777;font:300 26px/1 -apple-system,system-ui,sans-serif;padding-bottom:3px;touch-action:manipulation}
-#go.ready{background:var(--fg);color:#000;border-color:var(--fg)}
-.editing #go{font:700 17px/1 var(--mono);padding:0}
+#inwrap{flex:1;position:relative;display:flex}
+#inwrap #in{padding-right:40px}
+#go{position:absolute;right:4px;top:50%;margin-top:-14px;width:28px;height:28px;border-radius:50%;border:0;padding:0;
+  background:#2a2a2a;color:#666;font:400 20px/28px -apple-system,system-ui,sans-serif;text-align:center;touch-action:manipulation;transition:background .12s,color .12s}
+#go.ready{background:var(--fg);color:#000}
+.editing #go{font:700 14px/28px var(--mono)}
 #chips{margin-top:7px;display:flex;flex-direction:column;gap:6px}
 .crow{display:flex;gap:5px}
 .chip{--c:#cfcfcb;flex:1 1 0;min-width:0;height:40px;border-radius:9px;font:700 13px/1 var(--mono);letter-spacing:.02em;
@@ -109,7 +112,7 @@ header .sp{flex:1}
 <main id="list"></main>
 
 <div id="bar">
-  <div id="inrow"><input id="in" placeholder="Add…  (codes: c t b ! !! @ m a e tm s)" autocomplete="off" autocorrect="on" enterkeyhint="done"><button id="del">DEL</button><button id="go" aria-label="Add">+</button></div>
+  <div id="inrow"><div id="inwrap"><input id="in" placeholder="Add…  (codes: c t b ! !! @ m a e tm s)" autocomplete="off" autocorrect="on" enterkeyhint="done"><button id="go" aria-label="Add">+</button></div><button id="del">DEL</button></div>
   <div id="chips">
     <div class="crow">
       <button class="chip" data-k="o" data-v="T" style="--c:var(--tlg)">TLG</button><button class="chip" data-k="o" data-v="C" style="--c:var(--cel)">CEL</button><button class="chip" data-k="o" data-v="B" style="--c:var(--bth)">BTH</button>
@@ -143,7 +146,7 @@ const dLbl=(o=0)=>fmtLbl.format(new Date(Date.now()+o*864e5)).replace(",","").to
 const isoLbl=iso=>fmtLbl.format(new Date(iso+"T12:00:00+03:00")).replace(",","").toUpperCase();
 
 /* ---------- state ---------- */
-const LS="todo.v1", VER="v8", DEF_REPO="mzitnamor/todo-data";
+const LS="todo.v1", VER="v9", DEF_REPO="mzitnamor/todo-data";
 let S=load();            // {v,items:[],note:{t,up}}
 let cfg=loadCfg();       // {repo,tok}
 let dirty=localStorage.getItem(LS+".dirty")==="1";
