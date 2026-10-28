@@ -120,7 +120,7 @@ header .sp{flex:1}
 <main id="list"></main>
 
 <div id="bar">
-  <div id="inrow"><div id="inwrap"><span id="pills"></span><input id="in" placeholder="Add…  (codes: c t b ! !! @ m a e tod tmr sb)" autocomplete="off" autocorrect="on" enterkeyhint="done"><button id="go" aria-label="Add">+</button></div><button id="del">DEL</button></div>
+  <div id="inrow"><div id="inwrap"><span id="pills"></span><input id="in" placeholder="Add…  (codes: tlg cel bth ! !! @ m a e tod tmr sb)" autocomplete="off" autocorrect="on" enterkeyhint="done"><button id="go" aria-label="Add">+</button></div><button id="del">DEL</button></div>
   <div id="chips">
     <div class="crow">
       <button class="chip" data-k="o" data-v="T" style="--c:var(--tlg)">TLG</button><button class="chip" data-k="o" data-v="C" style="--c:var(--cel)">CEL</button><button class="chip" data-k="o" data-v="B" style="--c:var(--bth)">BTH</button>
@@ -154,7 +154,7 @@ const dLbl=(o=0)=>fmtLbl.format(new Date(Date.now()+o*864e5)).replace(",","").to
 const isoLbl=iso=>fmtLbl.format(new Date(iso+"T12:00:00+03:00")).replace(",","").toUpperCase();
 
 /* ---------- state ---------- */
-const LS="todo.v1", VER="v17", DEF_REPO="mzitnamor/todo-data";
+const LS="todo.v1", VER="v18", DEF_REPO="mzitnamor/todo-data";
 let S=load();            // {v,items:[],note:{t,up}}
 let cfg=loadCfg();       // {repo,tok}
 let dirty=localStorage.getItem(LS+".dirty")==="1";
@@ -187,7 +187,7 @@ function tidy(){
 }
 
 /* ---------- shorthand ---------- */
-const CODES={c:["o","C"],t:["o","T"],b:["o","B"],"!":["u",1],"!!":["u",2],"‼":["u",2],"@":["d",1],d:["d",1],
+const CODES={cel:["o","C"],tlg:["o","T"],bth:["o","B"],"!":["u",1],"!!":["u",2],"‼":["u",2],"@":["d",1],d:["d",1],
   m:["s","m"],a:["s","a"],e:["s","e"],tm:["w","1"],tmr:["w","1"],tomorrow:["w","1"],s:["w","s"],sb:["w","s"],stby:["w","s"],standby:["w","s"],
   tod:["w","0"],today:["w","0"],morning:["s","m"],afternoon:["s","a"],evening:["s","e"]};
 const DEF={o:"",u:0,d:0,s:"",w:"0"}, PK=["o","u","d","w","s"];
@@ -204,7 +204,7 @@ function pillify(){
 function paintPills(){
   const el=$("#pills");
   el.innerHTML=pillOrder.map(k=>{const v=String(man[k]);const c=(PCOL[k]&&PCOL[k][v])||"#cfcfcb";return `<button class="pill" data-k="${k}" style="--c:${c}">${(PLBL[k]||{})[v]||v}</button>`}).join("");
-  inp.placeholder=pillOrder.length?"task…":"Add…  (codes: c t b ! !! @ m a e tod tmr sb)";
+  inp.placeholder=pillOrder.length?"task…":"Add…  (codes: tlg cel bth ! !! @ m a e tod tmr sb)";
 }
 function parse(txt){
   const w=txt.trim().split(/\s+/); const f={};
