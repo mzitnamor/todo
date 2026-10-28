@@ -79,6 +79,7 @@ header .sp{flex:1}
 /* bottom bar */
 #bar{position:fixed;left:0;right:0;bottom:0;background:rgba(10,10,10,.96);backdrop-filter:blur(10px);
   -webkit-backdrop-filter:blur(10px);border-top:1px solid #222;padding:7px 10px calc(env(safe-area-inset-bottom) + 6px)}
+.kb #bar{padding-bottom:7px}
 #inrow{display:flex;gap:6px;align-items:center}
 #in{flex:1;background:#171717;border:1px solid #2a2a2a;border-radius:8px;color:var(--fg);
   font:16px/1.2 -apple-system,system-ui,sans-serif;padding:7px 9px;outline:none;-webkit-user-select:text;user-select:text;resize:none;height:36px}
@@ -133,6 +134,8 @@ header .sp{flex:1}
   <div class="k">Key (GitHub token)</div><input id="sTok" placeholder="github_pat_…" autocapitalize="off" autocorrect="off" type="password">
   <button id="sSave">SAVE</button><button id="sSync">SYNC NOW</button><button id="sClose">CLOSE</button>
   <div id="sInfo" style="margin-top:16px"></div>
+  <div id="sDiag" style="margin-top:14px;color:#666;font-size:11px"></div>
+  <div id="probe" style="position:fixed;left:0;width:0;top:env(safe-area-inset-top);bottom:env(safe-area-inset-bottom);visibility:hidden;pointer-events:none"></div>
 </div>
 
 <script>
@@ -146,7 +149,7 @@ const dLbl=(o=0)=>fmtLbl.format(new Date(Date.now()+o*864e5)).replace(",","").to
 const isoLbl=iso=>fmtLbl.format(new Date(iso+"T12:00:00+03:00")).replace(",","").toUpperCase();
 
 /* ---------- state ---------- */
-const LS="todo.v1", VER="v11", DEF_REPO="mzitnamor/todo-data";
+const LS="todo.v1", VER="v12", DEF_REPO="mzitnamor/todo-data";
 let S=load();            // {v,items:[],note:{t,up}}
 let cfg=loadCfg();       // {repo,tok}
 let dirty=localStorage.getItem(LS+".dirty")==="1";
@@ -286,6 +289,8 @@ list.addEventListener("click",e=>{
   startEdit(i);
 });
 inp.addEventListener("input",paintChips);
+inp.addEventListener("focus",()=>document.body.classList.add("kb"));
+inp.addEventListener("blur",()=>document.body.classList.remove("kb"));
 inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();submit()} if(e.key==="Escape"){reset();render()}});
 inp.addEventListener("paste",e=>{
   const t=(e.clipboardData||window.clipboardData).getData("text");
@@ -422,6 +427,8 @@ $("#dot").addEventListener("click",()=>{
   $("#sRepo").value=cfg?cfg.repo:DEF_REPO; $("#sTok").value=cfg?cfg.tok:"";
   $("#sInfo").textContent=VER+" · "+(cfg?("Last sync: "+(lastSync?new Date(lastSync).toLocaleString("en-GB",{timeZone:TZ}):"never")+(dirty?" · changes waiting":"")):"Not connected — saved on this phone only.")+(lastErr?"  ·  ERROR: "+lastErr:"");
   $("#set").classList.add("show");
+  const pr=$("#probe").getBoundingClientRect(), vv=window.visualViewport, br=$("#bar").getBoundingClientRect();
+  $("#sDiag").textContent=`DIAG ih:${innerHeight} ch:${document.documentElement.clientHeight} vv:${vv?Math.round(vv.height)+"/"+Math.round(vv.offsetTop):"-"} scr:${screen.width}x${screen.height} safeT:${Math.round(pr.top)} safeB:${Math.round(innerHeight-pr.bottom)} bar:${Math.round(br.top)}-${Math.round(br.bottom)} sy:${Math.round(scrollY)} sa:${navigator.standalone?1:0} dpr:${devicePixelRatio}`;
 });
 $("#sClose").onclick=()=>$("#set").classList.remove("show");
 $("#sSave").onclick=()=>{const r=$("#sRepo").value.trim()||DEF_REPO,t=$("#sTok").value.trim();
