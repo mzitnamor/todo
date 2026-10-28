@@ -154,7 +154,7 @@ const dLbl=(o=0)=>fmtLbl.format(new Date(Date.now()+o*864e5)).replace(",","").to
 const isoLbl=iso=>fmtLbl.format(new Date(iso+"T12:00:00+03:00")).replace(",","").toUpperCase();
 
 /* ---------- state ---------- */
-const LS="todo.v1", VER="v19", DEF_REPO="mzitnamor/todo-data";
+const LS="todo.v1", VER="v20", DEF_REPO="mzitnamor/todo-data";
 let S=load();            // {v,items:[],note:{t,up}}
 let cfg=loadCfg();       // {repo,tok}
 let dirty=localStorage.getItem(LS+".dirty")==="1";
@@ -494,12 +494,24 @@ $("#sSync").onclick=()=>{$("#set").classList.remove("show");sync()};
    won't cover it, so iOS has no reason to pan; then pin the panel to the top of the keyboard
    using visualViewport. The list stays where it was; the panel slides over it. */
 const bar=$("#bar"); let lockY=null, lockT=0, parking=false;
+let settleT=0;
 function placeBar(){
   const vv=window.visualViewport; if(!vv)return;
   const off=Math.max(0,innerHeight-(vv.height+vv.offsetTop));
-  if(parking&&off<80)return;            // keyboard not up yet
+  if(parking){                               // wait for the keyboard to finish moving, then reveal once
+    if(off<80)return;
+    clearTimeout(settleT); settleT=setTimeout(()=>reveal(off),70); return;
+  }
+  bar.style.transform=off?`translateY(${-off}px)`:"";
+}
+function reveal(off){
   parking=false;
-  bar.style.transform=off?`translateY(${-off}px)`:""; bar.style.opacity="";
+  bar.style.transition="none";
+  bar.style.transform=`translateY(${-off+22}px)`;   // start slightly low, invisible
+  void bar.offsetHeight;
+  bar.style.transition="transform .16s ease-out, opacity .16s ease-out";
+  bar.style.opacity="1"; bar.style.transform=`translateY(${-off}px)`;
+  setTimeout(()=>{bar.style.transition=""},200);
 }
 if(window.visualViewport){visualViewport.addEventListener("resize",placeBar);visualViewport.addEventListener("scroll",placeBar)}
 addEventListener("scroll",()=>{if(lockY!==null&&Date.now()<lockT&&Math.abs(scrollY-lockY)>1)scrollTo(0,lockY)},{passive:true});
@@ -508,9 +520,9 @@ function liftFocus(){
   lockY=scrollY; lockT=Date.now()+1200; parking=true;
   bar.style.transition="none"; bar.style.opacity="0";
   bar.style.transform=`translateY(${-Math.round(innerHeight*0.62)}px)`;
-  void bar.offsetHeight; bar.style.transition="";
+  void bar.offsetHeight;
   try{inp.focus({preventScroll:true})}catch(_){inp.focus()}
-  setTimeout(()=>{if(parking){parking=false;placeBar();bar.style.opacity=""}},900); // fallback
+  setTimeout(()=>{if(parking){const vv=window.visualViewport;reveal(vv?Math.max(0,innerHeight-(vv.height+vv.offsetTop)):0)}},1000); // fallback
 }
 let tStart=null;
 inp.addEventListener("touchstart",e=>{if(document.activeElement!==inp){e.preventDefault();tStart=[e.touches[0].clientX,e.touches[0].clientY]}},{passive:false});
