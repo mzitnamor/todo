@@ -155,7 +155,7 @@ const dLbl=(o=0)=>fmtLbl.format(new Date(Date.now()+o*864e5)).replace(",","").to
 const isoLbl=iso=>fmtLbl.format(new Date(iso+"T12:00:00+03:00")).replace(",","").toUpperCase();
 
 /* ---------- state ---------- */
-const LS="todo.v1", VER="v22", DEF_REPO="mzitnamor/todo-data";
+const LS="todo.v1", VER="v23", DEF_REPO="mzitnamor/todo-data";
 let S=load();            // {v,items:[],note:{t,up}}
 let cfg=loadCfg();       // {repo,tok}
 let dirty=localStorage.getItem(LS+".dirty")==="1";
@@ -171,14 +171,17 @@ const live=()=>S.items.filter(i=>!i.del);
 function touch(i){i.up=Date.now();dirty=true}
 function commit(){save();render();queueSync()}
 
-/* ---------- housekeeping: rollover + 24h purge ---------- */
+/* unfinished items from past days show up in today as (LATE) — computed, not stored */
+const dayOf=i=>(!i.done&&i.day&&i.day<dISO())?dISO():i.day;
+const lateOf=i=>!i.done&&!!(i.late||(i.day&&i.day<dISO()));
+/* ---------- housekeeping: 24h purge ---------- */
 function tidy(){
   const today=dISO(), now=Date.now(); let ch=false;
   const n0=S.items.length; S.items=S.items.filter(i=>!/github_pat_|TODOKEY/i.test(i.t||"")); if(S.items.length!==n0)ch=true;
   for(const i of S.items){
     if(i.del){continue}
     if(i.done && now-i.done>864e5){i.del=1;touch(i);ch=true;continue}
-    if(!i.done && i.day && i.day<today){i.day=today;i.late=1;touch(i);ch=true}
+    // rollover of unfinished past items is display-only (see dayOf) — never an edit, so it can't outrank a real change on another phone
   }
   const before=S.items.length;
   S.items=S.items.filter(i=>!(i.del && now-i.up>14*864e5));
@@ -226,7 +229,7 @@ function sortRows(a,b){
 }
 function row(i,extra="",dk=""){
   return `<div class="row${i.u?" u"+i.u:""}${i.done?" done":""}${i.id===editId?" edit":""}" data-id="${i.id}"${dk?` data-drop="${dk}"`:""}>
-<span class="ck"></span><span class="tag ${i.o||""}">${i.o?`<b>${i.o==="T"?"TLG":i.o==="C"?"CEL":"BTH"}</b>`:""}</span><span class="at">${i.d?"@":""}</span><span class="tt">${esc(i.t)}${i.late&&!i.done?'<span class="late">(LATE)</span>':""}${extra}</span><span class="hd"></span></div>`;
+<span class="ck"></span><span class="tag ${i.o||""}">${i.o?`<b>${i.o==="T"?"TLG":i.o==="C"?"CEL":"BTH"}</b>`:""}</span><span class="at">${i.d?"@":""}</span><span class="tt">${esc(i.t)}${lateOf(i)?'<span class="late">(LATE)</span>':""}${extra}</span><span class="hd"></span></div>`;
 }
 function dayBlock(items,cls,name,lbl,off){
   const open=items.filter(i=>!i.done).length;
@@ -243,8 +246,8 @@ function render(){
   if(drag){drag.pending=true;return}
   tidy();
   const t=dISO(),tm=dISO(1),L=live();
-  const today=L.filter(i=>i.day&&(i.day===t||(i.done&&i.day<t)));
-  const tmr=L.filter(i=>i.day===tm);
+  const today=L.filter(i=>i.day&&(dayOf(i)===t||(i.done&&i.day<t)));
+  const tmr=L.filter(i=>dayOf(i)===tm);
   const later=L.filter(i=>i.day&&i.day>tm).sort((a,b)=>a.day<b.day?-1:a.day>b.day?1:sortRows(a,b));
   const stby=L.filter(i=>!i.day).sort(sortRows);
   let h=dayBlock(today,"tod","TODAY",dLbl(0),"0")+dayBlock(tmr,"tmr","TOMORROW",dLbl(1),"1");
@@ -279,7 +282,7 @@ function addFromLine(line){
 function mk(title,f){
   const i={id:uid(),t:title,o:f.o||"",u:+f.u||0,d:+f.d||0,slot:f.s||"",day:f.w==="s"?null:dISO(+f.w||0),done:null,late:0,cr:Date.now()};
   i.ord=i.cr;
-  if(i.u){const sib=live().filter(x=>!x.done&&x.day===i.day&&(x.slot||"")===i.slot); if(sib.length)i.ord=Math.min(...sib.map(x=>x.ord??x.cr))-1000}
+  if(i.u){const sib=live().filter(x=>!x.done&&dayOf(x)===i.day&&(x.slot||"")===i.slot); if(sib.length)i.ord=Math.min(...sib.map(x=>x.ord??x.cr))-1000}
   touch(i);return i;
 }
 function submit(){
@@ -291,7 +294,7 @@ function submit(){
   if(!title){reset();render();return}
   if(editId){
     const i=S.items.find(x=>x.id===editId);
-    if(i){const nd=f.w==="s"?null:(i.day&&((f.w==="0"&&i.day===dISO())||(f.w==="1"&&i.day===dISO(1)))?i.day:dISO(+f.w||0));
+    if(i){const nd=f.w==="s"?null:(i.day&&((f.w==="0"&&dayOf(i)===dISO())||(f.w==="1"&&dayOf(i)===dISO(1)))?i.day:dISO(+f.w||0));
       if(nd!==i.day)i.late=0;
       Object.assign(i,{t:title,o:f.o,u:+f.u,d:+f.d,slot:f.s,day:nd});touch(i)}
   } else S.items.push(mk(title,f));
@@ -431,10 +434,11 @@ function endDrag(apply){
   const i=S.items.find(x=>x.id===d.id);
   if(apply&&i&&d.over){
     if(d.over==="trash"){i.del=1;touch(i)}
-    else{const [w,sl]=d.over.split("|"); const nd=w==="s"?null:dISO(+w);
+    else{const [w,sl]=d.over.split("|"); const tgt=w==="s"?null:dISO(+w);
+      let nd=(tgt&&tgt===dayOf(i))?i.day:tgt;   // reordering a LATE item within today keeps it LATE
       if(nd!==i.day)i.late=0;
       // new position among the open items of the target slot
-      const sib=live().filter(x=>x!==i&&!x.done&&x.day===nd&&(x.slot||"")===sl).sort(sortRows);
+      const sib=live().filter(x=>x!==i&&!x.done&&dayOf(x)===tgt&&(x.slot||"")===sl).sort(sortRows);
       const ix=d.before?sib.findIndex(x=>x.id===d.before):sib.length;
       const o=x=>x.ord??x.cr??0;
       let ord;
