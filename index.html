@@ -23,8 +23,11 @@ html,body{background:var(--bg);color:var(--fg)}
 body{font:14px/1.25 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
   padding:calc(env(safe-area-inset-top) + 6px) 12px calc(env(safe-area-inset-bottom) + 150px);
   -webkit-user-select:none;user-select:none;overflow-x:hidden}
-header{display:flex;align-items:center;gap:8px;height:22px;margin-bottom:4px}
-header b{font:700 11px/1 var(--mono);letter-spacing:.14em;color:var(--dim)}
+header{display:flex;align-items:center;gap:8px;height:36px;margin-bottom:2px}
+#tabs{display:flex;gap:4px;margin-left:-4px}
+#tabs button{font:700 11.5px/1 var(--mono);letter-spacing:.12em;color:var(--dim);background:none;border:0;padding:10px 8px;border-radius:7px;touch-action:manipulation}
+#tabs button.on{color:#000;background:var(--fg)}
+#tabs button i{font-style:normal;font-weight:400;margin-left:5px;opacity:.75}
 header .sp{flex:1}
 #cnt{font:11px/1 var(--mono);color:var(--dim)}
 #dot{width:9px;height:9px;border-radius:50%;background:var(--dimmer);border:6px solid transparent;box-sizing:content-box;margin-right:-6px}
@@ -38,20 +41,24 @@ header .sp{flex:1}
 .day.tmr h2{color:#bdbdb9}
 .day.fold{cursor:pointer}
 .slot{font:600 9.5px/1 var(--mono);letter-spacing:.14em;color:var(--dim);margin:7px 0 1px 30px}
-.row{display:flex;align-items:center;min-height:32px;border-bottom:1px solid var(--line);-webkit-touch-callout:none;transition:background .15s}
+.row{display:flex;align-items:center;min-height:40px;border-bottom:1px solid var(--line);-webkit-touch-callout:none;transition:background .15s}
 .row.press{background:#151515}
-.ck{width:42px;height:32px;margin-left:-12px;display:flex;align-items:center;justify-content:center;flex:none}
+.ck{width:42px;height:40px;margin-left:-12px;display:flex;align-items:center;justify-content:center;flex:none}
 .ck::before{content:"";width:17px;height:17px;border-radius:50%;border:2px solid #555;box-sizing:border-box}
 .done .ck::after{content:"";position:absolute;width:5px;height:9px;border:solid #000;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
 .ck{position:relative}
 .u1 .ck::before{border-color:var(--u1);background:rgba(255,173,31,.18)}
 .u2 .ck::before{border-color:var(--u2);background:rgba(255,69,69,.3)}
 .done .ck::before{border-color:#4a4a48;background:#4a4a48}
-.tag{width:36px;flex:none;display:flex;align-items:center}
+.tag{width:36px;height:40px;flex:none;display:flex;align-items:center}
 .tag b{font:600 9px/1 var(--mono);letter-spacing:.04em;color:#d6d6d2;padding:2px 3px 2px 3.5px;border:1px solid var(--tc);border-radius:3px}
 .tag.T{--tc:var(--tlg)} .tag.C{--tc:var(--cel)} .tag.B{--tc:var(--bth)}
-.at{font:700 12px/1 var(--mono);color:var(--dig);width:13px;flex:none}
-.tt{flex:1;padding:5px 0;word-break:break-word}
+.at{font:700 12px/40px var(--mono);color:var(--dig);width:13px;height:40px;flex:none}
+.tt{flex:1;align-self:stretch;display:flex;align-items:center;flex-wrap:wrap;padding:8px 0;word-break:break-word}
+.tt::before{margin-right:4px}
+.ie{flex:1;min-width:0;width:100%;background:#1b1b1b;border:1px solid #444;border-radius:6px;color:var(--fg);font:16px/1.2 -apple-system,system-ui,sans-serif;
+  padding:6px 7px;outline:none;-webkit-user-select:text;user-select:text}
+body.inl{padding-bottom:560px}
 .u2 .tt{color:#ff8a8a}
 .u1 .tt::before{content:"! ";color:var(--u1);font:700 12px var(--mono)}
 .u2 .tt::before{content:"‼ ";color:var(--u2);font:700 12px var(--mono)}
@@ -62,8 +69,8 @@ header .sp{flex:1}
 .row.edit{background:#141414}
 .empty{font:12px var(--mono);color:var(--dimmer);padding:4px 0 2px 30px}
 .date{font:10px var(--mono);color:var(--dim);margin-left:6px}
-.hd{width:30px;height:27px;flex:none;display:flex;align-items:center;justify-content:flex-end;touch-action:none;cursor:grab}
-.hd::before{content:"";width:14px;height:2px;border-radius:1px;background:#3d3d3b;box-shadow:0 -4px 0 #3d3d3b,0 4px 0 #3d3d3b}
+.hd{width:52px;height:40px;margin-right:8px;flex:none;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab}
+.hd::before{content:"";width:17px;height:2px;border-radius:1px;background:#4a4a47;box-shadow:0 -5px 0 #4a4a47,0 5px 0 #4a4a47}
 .slot.emp,.dz{display:none}
 .dragging .slot.emp{display:block}
 .dragging .dz{display:flex}
@@ -101,6 +108,7 @@ header .sp{flex:1}
 #go.ready{background:var(--fg);color:#000}
 .editing #go{font:700 14px/28px var(--mono)}
 #chips{margin-top:7px;display:flex;flex-direction:column;gap:6px}
+.tab-buy #chips .crow+.crow{display:none}
 .crow{display:flex;gap:5px}
 .chip{--c:#cfcfcb;flex:1 1 0;min-width:0;height:40px;border-radius:9px;font:700 13px/1 var(--mono);letter-spacing:.02em;
   color:color-mix(in srgb,var(--c) 78%,#000);background:color-mix(in srgb,var(--c) 9%,#0a0a0a);
@@ -116,7 +124,7 @@ header .sp{flex:1}
 </style>
 </head>
 <body>
-<div id="page"><header><b>TO-DO</b><span class="sp"></span><span id="cnt"></span><span id="dot" title="sync"></span></header>
+<div id="page"><header><nav id="tabs"><button data-tab="todo">TO-DO<i></i></button><button data-tab="buy">TO-BUY<i></i></button></nav><span class="sp"></span><span id="dot" title="sync"></span></header>
 <div id="note"></div>
 <main id="list"></main></div>
 
@@ -155,13 +163,17 @@ const dLbl=(o=0)=>fmtLbl.format(new Date(Date.now()+o*864e5)).replace(",","").to
 const isoLbl=iso=>fmtLbl.format(new Date(iso+"T12:00:00+03:00")).replace(",","").toUpperCase();
 
 /* ---------- state ---------- */
-const LS="todo.v1", VER="v23", DEF_REPO="mzitnamor/todo-data";
+const LS="todo.v1", VER="v2.0", DEF_REPO="mzitnamor/todo-data";
 let S=load();            // {v,items:[],note:{t,up}}
 let cfg=loadCfg();       // {repo,tok}
 let dirty=localStorage.getItem(LS+".dirty")==="1";
 let lastSync=+localStorage.getItem(LS+".last")||0;
 let editId=null, man={}; // manual chip overrides
 let stbyOpen=false;
+let tab=(()=>{try{return localStorage.getItem(LS+".tab")||"todo"}catch(_){return "todo"}})();
+const isBuy=i=>i.ls==="buy";
+const inTab=i=>tab==="buy"?isBuy(i):!isBuy(i);
+let ie=null;   // inline edit: {id,input}
 
 function load(){try{const s=JSON.parse(localStorage.getItem(LS));if(s&&s.items)return s}catch(e){}return{v:1,items:[],note:{t:"",up:0}}}
 function loadCfg(){try{return JSON.parse(localStorage.getItem(LS+".cfg"))}catch(e){return null}}
@@ -207,8 +219,8 @@ function pillify(){
 }
 function paintPills(){
   const el=$("#pills");
-  el.innerHTML=pillOrder.map(k=>{const v=String(man[k]);const c=(PCOL[k]&&PCOL[k][v])||"#cfcfcb";return `<button class="pill" data-k="${k}" style="--c:${c}">${(PLBL[k]||{})[v]||v}</button>`}).join("");
-  inp.placeholder=pillOrder.length?"task…":"Add…  (codes: tlg cel bth ! !! @ m a e tod tmr sb)";
+  el.innerHTML=ie?"":pillOrder.map(k=>{const v=String(man[k]);const c=(PCOL[k]&&PCOL[k][v])||"#cfcfcb";return `<button class="pill" data-k="${k}" style="--c:${c}">${(PLBL[k]||{})[v]||v}</button>`}).join("");
+  inp.placeholder=ie?"editing above…":pillOrder.length?(tab==="buy"?"item…":"task…"):(tab==="buy"?"Add to buy…  (codes: tlg cel bth ! !! @)":"Add…  (codes: tlg cel bth ! !! @ m a e tod tmr sb)");
 }
 function parse(txt){
   const w=txt.trim().split(/\s+/); const f={};
@@ -244,8 +256,14 @@ function dayBlock(items,cls,name,lbl,off){
 }
 function render(){
   if(drag){drag.pending=true;return}
+  if(ie){ie.pending=true;return}
   tidy();
-  const t=dISO(),tm=dISO(1),L=live();
+  document.body.classList.toggle("tab-buy",tab==="buy");
+  document.querySelectorAll("#tabs button").forEach(b=>{const on=b.dataset.tab===tab;b.classList.toggle("on",on);
+    const n=live().filter(i=>!i.done&&(b.dataset.tab==="buy"?isBuy(i):!isBuy(i)&&i.day&&dayOf(i)===dISO())).length; b.querySelector("i").textContent=n||""});
+  $("#note").textContent=(S.note&&S.note.t)||"";
+  if(tab==="buy"){renderBuy();paintChips();return}
+  const t=dISO(),tm=dISO(1),L=live().filter(i=>!isBuy(i));
   const today=L.filter(i=>i.day&&(dayOf(i)===t||(i.done&&i.day<t)));
   const tmr=L.filter(i=>dayOf(i)===tm);
   const later=L.filter(i=>i.day&&i.day>tm).sort((a,b)=>a.day<b.day?-1:a.day>b.day?1:sortRows(a,b));
@@ -255,13 +273,23 @@ function render(){
   h+=`<div class="day fold" id="stbyH" data-drop="s|"><h2 style="color:var(--dim)">STBY ${stbyOpen?"▾":"▸"}</h2><span></span><i>${stby.filter(i=>!i.done).length}</i></div>`;
   if(stbyOpen)h+=stby.length?stby.map(i=>row(i,"","s|")).join(""):`<div class="empty">—</div>`;
   list.innerHTML=h;
-  $("#cnt").textContent=`${today.filter(i=>!i.done).length} left`;
-  $("#note").textContent=(S.note&&S.note.t)||"";
   paintChips();
 }
+function renderBuy(){
+  const L=live().filter(isBuy).sort(sortRows);
+  let h=`<div class="day"><h2>TO-BUY</h2><span></span><i>${L.filter(i=>!i.done).length}/${L.length}</i></div>`;
+  h+=L.length?L.map(i=>row(i,"","b|")).join(""):`<div class="empty">—</div>`;
+  list.innerHTML=h;
+}
+function setTab(t){
+  if(t===tab)return; if(ie)endInline(true); if(editId||inp.value){reset()}
+  tab=t; try{localStorage.setItem(LS+".tab",t)}catch(_){}
+  window.scrollTo(0,0); render();
+}
+$("#tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b)setTab(b.dataset.tab)});
 function paintChips(){
   const {f}=fields();
-  const go=$("#go"); go.textContent=editId?"✓":"+"; go.classList.toggle("ready",!!inp.value.trim());
+  const go=$("#go"); go.textContent=editId?"✓":"+"; go.classList.toggle("ready",!!inp.value.trim()||!!ie);
   paintPills();
   document.querySelectorAll(".chip").forEach(c=>{const k=c.dataset.k,v=c.dataset.v;c.classList.toggle("on",String(f[k])===v)});
   document.body.classList.toggle("editing",!!editId);
@@ -272,7 +300,7 @@ function addFromLine(line){
   line=line.trim(); if(!line)return;
   const mx=line.match(/^x\s+(.+)/i);
   if(mx){ // tick by text
-    const q=mx[1].toLowerCase(); const it=live().find(i=>!i.done&&i.t.toLowerCase().includes(q));
+    const q=mx[1].toLowerCase(); const it=live().find(i=>inTab(i)&&!i.done&&i.t.toLowerCase().includes(q));
     if(it){it.done=Date.now();touch(it)} return;
   }
   const p=parse(line); const f=Object.assign({o:"",u:0,d:0,s:"",w:"0"},p.f);
@@ -282,7 +310,8 @@ function addFromLine(line){
 function mk(title,f){
   const i={id:uid(),t:title,o:f.o||"",u:+f.u||0,d:+f.d||0,slot:f.s||"",day:f.w==="s"?null:dISO(+f.w||0),done:null,late:0,cr:Date.now()};
   i.ord=i.cr;
-  if(i.u){const sib=live().filter(x=>!x.done&&dayOf(x)===i.day&&(x.slot||"")===i.slot); if(sib.length)i.ord=Math.min(...sib.map(x=>x.ord??x.cr))-1000}
+  if(tab==="buy"){i.ls="buy";i.day=null;i.slot=""}
+  if(i.u){const sib=live().filter(x=>!x.done&&(i.ls?isBuy(x):!isBuy(x)&&dayOf(x)===i.day&&(x.slot||"")===i.slot)); if(sib.length)i.ord=Math.min(...sib.map(x=>x.ord??x.cr))-1000}
   touch(i);return i;
 }
 function submit(){
@@ -294,11 +323,15 @@ function submit(){
   if(!title){reset();render();return}
   if(editId){
     const i=S.items.find(x=>x.id===editId);
-    if(i){const nd=f.w==="s"?null:(i.day&&((f.w==="0"&&dayOf(i)===dISO())||(f.w==="1"&&dayOf(i)===dISO(1)))?i.day:dISO(+f.w||0));
-      if(nd!==i.day)i.late=0;
-      Object.assign(i,{t:title,o:f.o,u:+f.u,d:+f.d,slot:f.s,day:nd});touch(i)}
+    if(i)applyEdit(i,title,f);
   } else S.items.push(mk(title,f));
   reset();commit();
+}
+function applyEdit(i,title,f){
+  if(isBuy(i)){Object.assign(i,{t:title,o:f.o,u:+f.u,d:+f.d});touch(i);return}
+  const nd=f.w==="s"?null:(i.day&&((f.w==="0"&&dayOf(i)===dISO())||(f.w==="1"&&dayOf(i)===dISO(1)))?i.day:dISO(+f.w||0));
+  if(nd!==i.day)i.late=0;
+  Object.assign(i,{t:title,o:f.o,u:+f.u,d:+f.d,slot:f.s,day:nd});touch(i);
 }
 function reset(){inp.value="";man={};pillOrder=[];editId=null;inp.blur();paintChips()}
 function startEdit(i){
@@ -309,36 +342,77 @@ function startEdit(i){
   inp.value=i.t; render(); liftFocus();
 }
 
+/* inline edit: tap a task's text to edit it in place; the chips below apply to it while editing */
+function startInline(i,r){
+  if(ie)endInline(true);
+  if(document.activeElement===inp){inp.value="";inp.blur()}
+  editId=i.id;
+  const w=!i.day?"s":dayOf(i)===dISO(1)?"1":"0";
+  man={o:i.o||"",u:i.u||0,d:i.d||0,s:i.slot||"",w}; pillOrder=[];
+  const tt=r.querySelector(".tt"); r.classList.add("edit");
+  const x=document.createElement("input"); x.className="ie"; x.value=i.t; x.setAttribute("enterkeyhint","done"); x.autocomplete="off";
+  tt.innerHTML=""; tt.appendChild(x);
+  ie={id:i.id,input:x,row:r,pending:false};
+  document.body.classList.add("inl");
+  x.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();endInline(true)} if(e.key==="Escape"){endInline(false)}});
+  x.addEventListener("blur",()=>setTimeout(()=>{if(ie&&ie.input===x&&document.activeElement!==x)endInline(true)},120));
+  x.focus(); const L=x.value.length; try{x.setSelectionRange(L,L)}catch(_){}
+  paintChips();
+  setTimeout(keepRowVisible,350); setTimeout(keepRowVisible,700);
+}
+function keepRowVisible(){
+  if(!ie)return; const rr=ie.row.getBoundingClientRect(), br=bar.getBoundingClientRect();
+  if(rr.bottom>br.top-8)window.scrollBy(0,rr.bottom-br.top+16);
+  else if(rr.top<8)window.scrollBy(0,rr.top-16);
+}
+function endInline(saveIt){
+  if(!ie)return; const cur=ie; ie=null;
+  document.body.classList.remove("inl");
+  const i=S.items.find(x=>x.id===cur.id);
+  if(saveIt&&i){
+    const p=parse(cur.input.value); const f=Object.assign({},DEF,p.f,man);
+    if(p.title.trim())applyEdit(i,p.title.trim(),f);
+  }
+  editId=null; man={}; pillOrder=[];
+  if(document.activeElement===cur.input)cur.input.blur();
+  commit();
+}
+
 // tapping anywhere outside the bottom bar closes the keyboard (and cancels an edit); that tap does nothing else
 let swallow=false;
 document.addEventListener("pointerdown",e=>{
+  if(ie&&!e.target.closest("#bar")&&!e.target.closest(".ie")&&!e.target.closest("#set")){
+    swallow=true; e.preventDefault(); e.stopPropagation(); endInline(true); setTimeout(()=>swallow=false,450); return;
+  }
   if(document.activeElement!==inp||e.target.closest("#bar")||e.target.closest("#set"))return;
   swallow=true; e.preventDefault(); e.stopPropagation();
   if(editId){reset();render()} else inp.blur();
   setTimeout(()=>swallow=false,450);
 },true);
 document.addEventListener("click",e=>{if(swallow){e.preventDefault();e.stopPropagation()}},true);
-// tap a row = tick / untick · press and hold a row = edit
+// tap left zone (circle/tag) = tick · tap text = edit in place · hold anywhere = drag
 let lp=null, lpFired=false;
 list.addEventListener("pointerdown",e=>{
-  const r=e.target.closest(".row"); if(!r||e.target.closest(".hd"))return;
+  const r=e.target.closest(".row"); if(!r||e.target.closest(".hd")||e.target.closest(".ie"))return;
   lpFired=false; clearTimeout(lp&&lp.t);
-  lp={r,x:e.clientX,y:e.clientY,t:setTimeout(()=>{lpFired=true;r.classList.remove("press");
-      const i=S.items.find(x=>x.id===r.dataset.id); if(i)startEdit(i)},450)};
+  const x0=e.clientX,y0=e.clientY;
+  lp={r,x:x0,y:y0,t:setTimeout(()=>{lpFired=true;r.classList.remove("press");lp=null;startDrag(r,drag?drag.x:x0,lastPY??y0)},380)};
+  lastPY=y0;
   r.classList.add("press");
 });
+let lastPY=null;
 const lpCancel=()=>{if(lp){clearTimeout(lp.t);lp.r.classList.remove("press");lp=null}};
-list.addEventListener("pointermove",e=>{if(lp&&Math.hypot(e.clientX-lp.x,e.clientY-lp.y)>8)lpCancel()});
+list.addEventListener("pointermove",e=>{lastPY=e.clientY;if(lp&&Math.hypot(e.clientX-lp.x,e.clientY-lp.y)>8)lpCancel()});
 list.addEventListener("pointerup",()=>{if(lp){clearTimeout(lp.t);lp.r.classList.remove("press")}});
 list.addEventListener("pointercancel",lpCancel);
 list.addEventListener("contextmenu",e=>e.preventDefault());
 list.addEventListener("click",e=>{
   if(e.target.closest("#stbyH")){stbyOpen=!stbyOpen;render();return}
-  if(e.target.closest(".hd"))return;
+  if(e.target.closest(".hd")||e.target.closest(".ie"))return;
   if(lpFired){lpFired=false;return}
   const r=e.target.closest(".row"); if(!r)return;
   const i=S.items.find(x=>x.id===r.dataset.id); if(!i)return;
-  if(editId===i.id){reset();render();return}
+  if(e.target.closest(".tt")&&!i.done){startInline(i,r);return}
   i.done=i.done?null:Date.now(); touch(i); commit();
 });
 inp.addEventListener("input",()=>{pillify();paintChips()});
@@ -368,12 +442,12 @@ function stripKey(txt,k){
   for(let j=w.length-1;j>=0;j--){const c=CODES[w[j].toLowerCase()]; if(tail&&j>0&&c){if(c[0]===k)continue;out.unshift(w[j])}else{tail=false;out.unshift(w[j])}}
   return out.join(" ");
 }
-$("#go").addEventListener("click",e=>{e.preventDefault();submit()});
+$("#go").addEventListener("click",e=>{e.preventDefault();if(ie){endInline(true);return}submit()});
 // keep the keyboard open when tapping chips / + on iPhone
 // (pointerdown has already fired by touchstart, so only block the focus loss here)
 document.querySelectorAll(".chip,#del").forEach(b=>b.addEventListener("touchstart",e=>e.preventDefault(),{passive:false}));
-$("#go").addEventListener("touchstart",e=>{e.preventDefault();const was=!editId;submit();if(was)liftFocus()},{passive:false});
-$("#del").addEventListener("pointerdown",e=>{e.preventDefault();const i=S.items.find(x=>x.id===editId);if(i){i.del=1;touch(i)}reset();commit()});
+$("#go").addEventListener("touchstart",e=>{e.preventDefault();if(ie){endInline(true);return}const was=!editId;submit();if(was)liftFocus()},{passive:false});
+$("#del").addEventListener("pointerdown",e=>{e.preventDefault();const i=S.items.find(x=>x.id===editId);if(ie){const c=ie;ie=null;document.body.classList.remove("inl");c.input.blur()}if(i){i.del=1;touch(i)}reset();commit()});
 
 /* ---------- drag to reschedule / delete ---------- */
 let drag=null;
@@ -383,8 +457,14 @@ list.addEventListener("pointerdown",e=>{
   const h=e.target.closest(".hd"); if(!h)return;
   e.preventDefault();
   const r=h.closest(".row"); if(!r)return;
+  startDrag(r,e.clientX,e.clientY);
+});
+function startDrag(r,cx,cy){
+  if(ie)endInline(true);
   if(editId){reset()}
+  r=list.querySelector(`.row[data-id="${r.dataset.id}"]`)||r;
   const rc=r.getBoundingClientRect();
+  const e={clientX:cx,clientY:cy};
   const g=r.cloneNode(true); g.classList.add("ghost"); g.style.width=rc.width+"px"; g.style.left=rc.left+"px";
   document.body.appendChild(g);
   drag={id:r.dataset.id,src:r,ghost:g,dy:e.clientY-rc.top,x:e.clientX,y:e.clientY,y0:e.clientY,over:null,pending:false,raf:0};
@@ -392,7 +472,9 @@ list.addEventListener("pointerdown",e=>{
   // drop zones for empty slots appear now; keep the dragged row under the finger
   drag.shift=Math.max(0,r.getBoundingClientRect().top-rc.top); if(drag.shift)page.style.transform=`translateY(${-drag.shift}px)`;
   moveGhost(); drag.raf=requestAnimationFrame(autoScroll);
-});
+}
+// once a drag has started from a hold, stop iOS from scrolling the page instead
+document.addEventListener("touchmove",e=>{if(drag)e.preventDefault()},{passive:false});
 function moveGhost(){ if(!drag)return; drag.ghost.style.top=(drag.y-drag.dy)+"px"; hitTest() }
 function hitTest(){
   let k=null;
@@ -434,6 +516,11 @@ function endDrag(apply){
   const i=S.items.find(x=>x.id===d.id);
   if(apply&&i&&d.over){
     if(d.over==="trash"){i.del=1;touch(i)}
+    else if(d.over==="b|"){
+      const sib=live().filter(x=>x!==i&&!x.done&&isBuy(x)).sort(sortRows);
+      const ix=d.before?sib.findIndex(x=>x.id===d.before):sib.length; const o=x=>x.ord??x.cr??0;
+      i.ord=!sib.length?o(i):ix<=0?o(sib[0])-1000:ix>=sib.length?o(sib[sib.length-1])+1000:(o(sib[ix-1])+o(sib[ix]))/2; touch(i) }
+    else if(isBuy(i)){}
     else{const [w,sl]=d.over.split("|"); const tgt=w==="s"?null:dISO(+w);
       let nd=(tgt&&tgt===dayOf(i))?i.day:tgt;   // reordering a LATE item within today keeps it LATE
       if(nd!==i.day)i.late=0;
@@ -493,7 +580,7 @@ async function sync(){
       {let m="";try{m=(await p.json()).message||""}catch(_){}throw new Error("PUT "+p.status+" "+m)}
     }
     lastErr="";lastSync=Date.now(); localStorage.setItem(LS+".last",lastSync);
-    save(); if(document.activeElement!==inp)render(); setDot();
+    save(); if(document.activeElement!==inp&&!ie)render(); setDot();
   }catch(e){console.warn(e);setDot(navigator.onLine?"err":"pend");lastErr=e.message+" @ "+new Date().toLocaleTimeString("en-GB",{timeZone:TZ});}
   finally{syncing=false;if(again){again=false;queueSync()}}
 }
@@ -566,7 +653,7 @@ inp.addEventListener("blur",()=>{lockY=null;setTimeout(placeBar,50)});
 window.addEventListener("online",()=>sync());
 window.addEventListener("offline",()=>setDot("pend"));
 document.addEventListener("visibilitychange",()=>{if(!document.hidden){render();sync()}});
-setInterval(()=>{if(!document.hidden&&document.activeElement!==inp){render();sync()}},25000);
+setInterval(()=>{if(!document.hidden&&document.activeElement!==inp&&!ie){render();sync()}},25000);
 if("serviceWorker" in navigator && window.isSecureContext)navigator.serviceWorker.register("sw.js").catch(()=>{});
 render();setDot();sync();
 </script>
